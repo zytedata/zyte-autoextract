@@ -24,6 +24,8 @@ to extract product and article information from any website.
 
 Both synchronous and asyncio wrappers are privided by this package.
 
+For Scrapy integration please check https://github.com/scrapinghub/scrapy-xod.
+
 License is BSD 3-clause.
 
 .. _Scrapinghub Developer API: https://scrapinghub.com/developer-api

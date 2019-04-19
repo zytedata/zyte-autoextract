@@ -22,7 +22,7 @@ python-xod
 Python client libraries for `Scrapinghub Developer API`_. It allows
 to extract product and article information from any website.
 
-Both synchronous and asyncio wrappers are privided by this package.
+Both synchronous and asyncio wrappers are provided by this package.
 
 For Scrapy integration please check https://github.com/scrapinghub/scrapy-xod.
 

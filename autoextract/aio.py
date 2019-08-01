@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-aiohttp Scrapinghub Developer API client.
+aiohttp Scrapinghub AutoExtract API client.
 """
 from typing import Optional, Dict, Any, List
 from functools import partial
@@ -23,12 +23,14 @@ async def request_raw(query: List[Dict[str, Any]],
                       *,
                       session: Optional[aiohttp.ClientSession] = None
                       ) -> List[Dict]:
-    """ Send a request to ScrapingHub Developer API. Query is a list of
-    dicts, as described in the API docs. """
+    """ Send a request to ScrapingHub AutoExtract API.
+    Query is a list of dicts, as described in the API docs
+    (see https://doc.scrapinghub.com/autoextract.html).
+    """
     auth = aiohttp.BasicAuth(get_apikey(api_key))
     post = _post_func(session)
     async with post(endpoint, json=query, auth=auth) as resp:
-        # FIXME: raise_for_status
+        resp.raise_for_status()
         return await resp.json()
 
 

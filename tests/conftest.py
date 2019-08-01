@@ -2,11 +2,11 @@
 import pytest
 import os
 
-from xod.apikey import ENV_VARIABLE
+from autoextract.apikey import ENV_VARIABLE
 
 
 @pytest.fixture()
-def xod_env_variable():
+def autoextract_env_variable():
     _FAKE_KEY = 'APIKEY'
     old_env = os.environ.copy()
     os.environ[ENV_VARIABLE] = _FAKE_KEY

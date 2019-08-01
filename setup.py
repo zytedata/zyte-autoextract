@@ -3,13 +3,13 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='xod',
-    version='0.0.1',
-    description='Python interface to Scrapinghub Developer API for extraction',
+    name='scrapinghub-autoextract',
+    version='0.1',
+    description='Python interface to Scrapinghub Automatic Extraction API',
     long_description=open('README.rst').read() + "\n\n" + open('CHANGES.rst').read(),
     author='Mikhail Korobov',
     author_email='kmike84@gmail.com',
-    url='https://github.com/scrapinghub/python-xod',
+    url='https://github.com/scrapinghub/scrapinghub-autoextract',
     packages=find_packages(exclude=['tests']),
     install_requires=[
         'requests',

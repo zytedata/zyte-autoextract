@@ -23,7 +23,7 @@ async def request_raw(query: List[Dict[str, Any]],
                       *,
                       session: Optional[aiohttp.ClientSession] = None
                       ) -> List[Dict]:
-    """ Send a request to ScrapingHub AutoExtract API.
+    """ Send a request to Scrapinghub AutoExtract API.
     Query is a list of dicts, as described in the API docs
     (see https://doc.scrapinghub.com/autoextract.html).
     """

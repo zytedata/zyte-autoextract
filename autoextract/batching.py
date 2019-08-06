@@ -25,4 +25,4 @@ def restore_order(results: List[Dict]) -> List[Dict]:
 
 
 def _sort_key(row):
-    return int(row['query']['userMeta'])
+    return int(row['query']['userQuery']['meta'])

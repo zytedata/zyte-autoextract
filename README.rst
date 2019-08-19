@@ -24,12 +24,9 @@ It allows to extract product and article information from any website.
 
 Both synchronous and asyncio wrappers are provided by this package.
 
-For Scrapy integration please check
-https://github.com/scrapinghub/scrapy-autoextract.
-
 License is BSD 3-clause.
 
-.. _Scrapinghub AutoExtract API: https://scrapinghub.com/developer-api
+.. _Scrapinghub AutoExtract API: https://scrapinghub.com/autoextract
 
 
 Installation

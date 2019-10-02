@@ -69,22 +69,47 @@ and page type, and ensures results are in the same order as requested URLs::
     urls = ['http://example.com/foo', 'http://example.com/bar']
     results = request_batch(urls, page_type='article')
 
+.. note::
+    Currently request_batch is limited to 100 URLs at time only.
+
 .. _API docs: https://doc.scrapinghub.com/autoextract.html
 
 
 asyncio API
 -----------
 
-Usage is similar to sync API (``request_batch`` and ``request_raw``
-are available), but asyncio event loop is used::
+Basic usage is similar to sync API (``request_raw``),
+but asyncio event loop is used::
 
-    from autoextract.aio import request_raw, request_batch
+    from autoextract.aio import request_raw
 
     async def foo():
         results1 = await request_raw(query)
-        results2 = await request_batch(urls, page_type='article')
         # ...
 
+There is also ``request_parallel`` function, which allows to process
+many URLs in parallel, using both batching and multiple connections::
+
+    import sys
+    from autoextract.aio import request_parallel
+
+    async def foo():
+        for f in request_parallel(urls, page_type='article', n_conn=10, batch_size=3):
+            try:
+                batch_result = await f
+                for res in batch_result:
+                    # do something with a result
+            except ApiError as e:
+                print(e, file=sys.stderr)
+                raise
+
+        results1 = await request_parallel(urls, page_type='article')
+        # ...
+
+``request_parallel`` handles throttling (http 429 errors), retrying a request
+in these cases.
+
+See ``examples/parallel.py`` for example usage.
 
 Contributing
 ============

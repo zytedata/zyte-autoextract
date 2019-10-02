@@ -10,9 +10,10 @@ setup(
     author='Mikhail Korobov',
     author_email='kmike84@gmail.com',
     url='https://github.com/scrapinghub/scrapinghub-autoextract',
-    packages=find_packages(exclude=['tests']),
+    packages=find_packages(exclude=['tests', 'examples']),
     install_requires=[
         'requests',
+        'tenacity',
     ],
     extras_require={
         'async': ['aiohttp >= 3.5.0'],

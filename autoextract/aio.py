@@ -34,9 +34,9 @@ class ApiError(ClientResponseError):
                f"headers={self.headers}, body={self.response_content}"
 
 
-API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
-                                    sock_read=API_TIMEOUT + 30,
-                                    sock_connect=10)
+AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
+                                        sock_read=API_TIMEOUT + 30,
+                                        sock_connect=10)
 
 retry_429_wait_strategy = wait_chain(
     # always wait 20-40s first

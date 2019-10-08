@@ -8,7 +8,9 @@ from .constants import API_MAX_BATCH
 
 def build_query(urls: List[str], page_type: str) -> List[Dict]:
     """ Given a list of URLs and page type, return query """
-    assert len(urls) < API_MAX_BATCH
+    if len(urls) >= API_MAX_BATCH:
+        raise ValueError("Batch size can't be greater than %s" %
+                         API_MAX_BATCH)
     return [{'url': url, 'pageType': page_type} for url in urls]
 
 

@@ -94,7 +94,8 @@ many URLs in parallel, using both batching and multiple connections::
     from autoextract.aio import request_parallel
 
     async def foo():
-        for f in request_parallel(urls, page_type='article', n_conn=10, batch_size=3):
+        for f in request_parallel(urls, page_type='article',
+                                  n_conn=10, batch_size=3):
             try:
                 batch_result = await f
                 for res in batch_result:
@@ -103,11 +104,8 @@ many URLs in parallel, using both batching and multiple connections::
                 print(e, file=sys.stderr)
                 raise
 
-        results1 = await request_parallel(urls, page_type='article')
-        # ...
-
-``request_parallel`` handles throttling (http 429 errors), retrying a request
-in these cases.
+``request_parallel`` and ``request_raw`` functions handle throttling
+(http 429 errors), retrying a request in these cases.
 
 See ``examples/parallel.py`` for example usage.
 

@@ -87,18 +87,21 @@ There is also ``request_parallel`` function, which allows to process
 many URLs in parallel, using both batching and multiple connections::
 
     import sys
-    from autoextract.aio import request_parallel
+    from autoextract.aio import request_parallel, create_session
 
     async def foo():
-        for f in request_parallel(urls, page_type='article',
-                                  n_conn=10, batch_size=3):
-            try:
-                batch_result = await f
-                for res in batch_result:
-                    # do something with a result
-            except ApiError as e:
-                print(e, file=sys.stderr)
-                raise
+        async with create_session() as session:
+            res_iter = request_parallel(urls, page_type='article',
+                                        n_conn=10, batch_size=3,
+                                        session=session)
+            for f in res_iter:
+                try:
+                    batch_result = await f
+                    for res in batch_result:
+                        # do something with a result
+                except ApiError as e:
+                    print(e, file=sys.stderr)
+                    raise
 
 ``request_parallel`` and ``request_raw`` functions handle throttling
 (http 429 errors), retrying a request in these cases.

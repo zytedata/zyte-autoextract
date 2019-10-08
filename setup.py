@@ -14,7 +14,7 @@ setup(
     install_requires=[
         'requests',
         'tenacity;python_version>="3.6"',
-        'aiohttp >= 3.5.0;python_version>="3.6"',
+        'aiohttp >= 3.6.0;python_version>="3.6"',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

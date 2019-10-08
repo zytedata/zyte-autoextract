@@ -20,6 +20,12 @@ from .apikey import get_apikey
 from .utils import chunks
 
 
+def create_session(**kwargs) -> aiohttp.ClientSession:
+    """ Create a session with parameters suited for AutoExtract """
+    kwargs.setdefault('timeout', AIO_API_TIMEOUT)
+    return aiohttp.ClientSession(**kwargs)
+
+
 class ApiError(ClientResponseError):
     """ Exception which is raised when API returns an error.
     In contrast with ClientResponseError, it allows to inspect response
@@ -67,7 +73,7 @@ async def request_raw(query: List[Dict[str, Any]],
     taken from SCRAPINGHUB_AUTOEXTRACT_KEY environment variable.
 
     ``session`` is an optional aiohttp.ClientSession object;
-    use it if you're making multiple requests and want to reuse HTTP sessions.
+    use it to enable HTTP Keep-Alive.
 
     This function retries http 429 errors by default; this allows to handle
     server-side throttling properly. Use ``retry_429=False`` if you want to
@@ -133,7 +139,7 @@ def request_parallel(urls: List[str],
     throughput with less connections to server.
 
     ``session`` is an optional aiohttp.ClientSession object;
-    use it if you want to reuse HTTP session.
+    use it to enable HTTP Keep-Alive.
     """
     sem = asyncio.Semaphore(n_conn)
 
@@ -172,6 +178,8 @@ async def request_batch(urls: List[str],
 def _post_func(session):
     """ Return a function to send a POST request """
     if session is None:
-        return partial(aiohttp.request, 'POST')
+        return partial(aiohttp.request,
+                       method='POST',
+                       timeout=AIO_API_TIMEOUT)
     else:
         return session.post

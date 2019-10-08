@@ -5,14 +5,13 @@ import sys
 from typing import List
 import asyncio
 
-from aiohttp.client import ClientSession
 import tqdm
 
-from autoextract.aio import AIO_API_TIMEOUT, request_parallel, ApiError
+from autoextract.aio import request_parallel, ApiError, create_session
 
 
 async def main(urls: List[str], out, n_conn, batch_size, page_type='article'):
-    async with ClientSession(timeout=AIO_API_TIMEOUT) as session:
+    async with create_session() as session:
         results_iter = request_parallel(urls,
                                         page_type=page_type,
                                         n_conn=n_conn,

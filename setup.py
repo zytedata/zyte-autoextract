@@ -13,11 +13,9 @@ setup(
     packages=find_packages(exclude=['tests', 'examples']),
     install_requires=[
         'requests',
-        'tenacity',
+        'tenacity;python_version>="3.6"',
+        'aiohttp >= 3.5.0;python_version>="3.6"',
     ],
-    extras_require={
-        'async': ['aiohttp >= 3.5.0'],
-    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',

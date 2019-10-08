@@ -36,11 +36,7 @@ Installation
 
     pip install scrapinghub-autoextract
 
-If you plan to use asyncio, run this instead, to install all dependencies::
-
-    pip install scrapinghub-autoextract[async]
-
-scrapinghub-autoextract requires Python 3.5+ for basic API
+scrapinghub-autoextract requires Python 3.5+ for the basic API
 and Python 3.6+ for async API.
 
 Usage

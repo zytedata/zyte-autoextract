@@ -9,10 +9,6 @@ matrix:
     - python: 3.7
       env: TOXENV=py37
     - python: 3.6
-      env: TOXENV=py36-aio
-    - python: 3.7
-      env: TOXENV=py37-aio
-    - python: 3.6
       env: TOXENV=mypy
 
 install:

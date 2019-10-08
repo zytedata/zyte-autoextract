@@ -11,5 +11,3 @@ API_TIMEOUT = 600
 
 # Max batch size
 API_MAX_BATCH = 100
-
-

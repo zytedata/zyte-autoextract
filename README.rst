@@ -46,8 +46,27 @@ First, make sure you have an API key. To avoid passing it in ``api_key``
 argument with every call, you can set ``SCRAPINGHUB_AUTOEXTRACT_KEY``
 environment variable with the key.
 
+Command-line interface
+----------------------
+
+The most basic way to use the client is from a command line.
+First, create a file with urls, an URL per line (e.g. ``urls.txt``).
+Second, set ``SCRAPINGHUB_AUTOEXTRACT_KEY`` env variable with your
+AutoExtract API key (you can also pass API key as ``--api-key`` script
+argument).
+
+Then run a script, to get the results::
+
+    python -m autoextract urls.txt --page-type article > res.jl
+
+Run ``python -m autoextract --help`` to get description of all supported
+options.
+
 Synchronous API
 ---------------
+
+Synchronous API provides an easy way to try autoextract in a script.
+For production usage asyncio API is strongly recommended.
 
 You can send requests as described in `API docs`_::
 
@@ -104,9 +123,10 @@ many URLs in parallel, using both batching and multiple connections::
                     raise
 
 ``request_parallel`` and ``request_raw`` functions handle throttling
-(http 429 errors), retrying a request in these cases.
+(http 429 errors) and network errors, retrying a request in these cases.
 
-See ``examples/parallel.py`` for example usage.
+CLI interface implementation (``autoextract/__main__.py``) can serve
+as an usage example.
 
 Contributing
 ============

@@ -5,4 +5,5 @@ collect_ignore = ["setup.py"]
 try:
     from aiohttp import ClientTimeout  # we need recent aiohttp
 except ImportError:
-    collect_ignore.append("autoextract/aio.py")
+    collect_ignore.append("autoextract/aio/")
+    collect_ignore.append("autoextract/__main__.py")

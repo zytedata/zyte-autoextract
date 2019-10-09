@@ -7,17 +7,18 @@ from typing import Optional, Dict, Any, List, Iterator
 from functools import partial
 
 import aiohttp
-from aiohttp import ClientResponseError
-from tenacity import (
-    retry, TryAgain, wait_chain, wait_fixed,
-    wait_random_exponential,
-    wait_random,
-)
 
-from .batching import record_order, restore_order, build_query
-from .constants import API_ENDPOINT, API_TIMEOUT
-from .apikey import get_apikey
-from .utils import chunks
+from autoextract.batching import record_order, restore_order, build_query
+from autoextract.constants import API_ENDPOINT, API_TIMEOUT
+from autoextract.apikey import get_apikey
+from autoextract.utils import chunks
+from .retry import autoextract_retry
+from .errors import ApiError
+
+
+AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
+                                        sock_read=API_TIMEOUT + 30,
+                                        sock_connect=10)
 
 
 def create_session(**kwargs) -> aiohttp.ClientSession:
@@ -26,42 +27,11 @@ def create_session(**kwargs) -> aiohttp.ClientSession:
     return aiohttp.ClientSession(**kwargs)
 
 
-class ApiError(ClientResponseError):
-    """ Exception which is raised when API returns an error.
-    In contrast with ClientResponseError, it allows to inspect response
-    content.
-    """
-    def __init__(self, *args, **kwargs):
-        self.response_content = kwargs.pop("response_content")
-        super().__init__(*args, **kwargs)
-
-    def __str__(self):
-        return f"ApiError: {self.status}, message={self.message}, " \
-               f"headers={self.headers}, body={self.response_content}"
-
-
-AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
-                                        sock_read=API_TIMEOUT + 30,
-                                        sock_connect=10)
-
-retry_429_wait_strategy = wait_chain(
-    # always wait 20-40s first
-    wait_fixed(20) + wait_random(0, 20),
-
-    # wait 20-40s again
-    wait_fixed(20) + wait_random(0, 20),
-
-    # wait from 30 to 300s, with full jitter and exponentially
-    # increasing max wait time
-    wait_fixed(30) + wait_random_exponential(multiplier=1, max=270)
-)
-
-
 async def request_raw(query: List[Dict[str, Any]],
                       api_key: Optional[str] = None,
                       endpoint: str = API_ENDPOINT,
                       *,
-                      retry_429: bool = True,
+                      handle_retries: bool = True,
                       session: Optional[aiohttp.ClientSession] = None
                       ) -> List[Dict]:
     """ Send a request to Scrapinghub AutoExtract API.
@@ -75,9 +45,10 @@ async def request_raw(query: List[Dict[str, Any]],
     ``session`` is an optional aiohttp.ClientSession object;
     use it to enable HTTP Keep-Alive.
 
-    This function retries http 429 errors by default; this allows to handle
-    server-side throttling properly. Use ``retry_429=False`` if you want to
-    disable this behavior (e.g. to implement it yourself).
+    This function retries http 429 errors and network errors by default;
+    this allows to handle server-side throttling properly.
+    Use ``handle_retries=False`` if you want to disable this behavior
+    (e.g. to implement it yourself).
 
     See :func:`request_parallel` for a more high-level interface to send
     requests in parallel.
@@ -101,19 +72,10 @@ async def request_raw(query: List[Dict[str, Any]],
             else:
                 return await resp.json()
 
-    @retry(wait=retry_429_wait_strategy)
-    async def request_retrying_429():
-        try:
-            return await request()
-        except ApiError as e:
-            if e.status == 429:
-                raise TryAgain
-            raise
+    if handle_retries:
+        request = autoextract_retry(request)
 
-    if retry_429:
-        return await request_retrying_429()
-    else:
-        return await request()
+    return await request()
 
 
 def request_parallel(urls: List[str],
@@ -162,7 +124,7 @@ async def request_batch(urls: List[str],
                         api_key: Optional[str] = None,
                         endpoint: str = API_ENDPOINT,
                         *,
-                        retry_429: bool = True,
+                        handle_retries: bool = True,
                         session: Optional[aiohttp.ClientSession] = None
                         ) -> List[Dict]:
     """ Send a batch request """
@@ -171,7 +133,7 @@ async def request_batch(urls: List[str],
                                 api_key=api_key,
                                 endpoint=endpoint,
                                 session=session,
-                                retry_429=retry_429)
+                                handle_retries=handle_retries)
     return restore_order(results)
 
 

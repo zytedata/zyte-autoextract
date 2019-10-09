@@ -36,8 +36,8 @@ Installation
 
     pip install scrapinghub-autoextract
 
-scrapinghub-autoextract requires Python 3.5+ for the basic API
-and Python 3.6+ for async API.
+scrapinghub-autoextract requires Python 3.6+ for CLI tool and for
+the asyncio API; basic, synchronous API works with Python 3.5.
 
 Usage
 =====

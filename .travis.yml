@@ -24,3 +24,14 @@ script: tox
 
 after_success:
 - codecov
+
+deploy:
+  provider: pypi
+  user: "__token__"
+  distributions: "sdist bdist_wheel"
+  password:
+    secure: "eaH6moqVeMRXWzbXQl3lRKWvjLsdhUj9vkiSJHW2XV8A0/B3/hR1ywa+aegafgSxPJDsVmazvpZLC7L+bUiKkhg18xYiOChijcffLfzv1su7XU/C4V0f4WYaIXhVJCOpxY8XXc1ngl8xxJ+JETUIHPZ4/chdO1fsRxYiK2kEqOvwDD2xzqdixWc8kWMbRnUoLK/pNKvE/48UP6MY3id3a+pVUXu2nGng8ZKIAqM//gamebKX9ZxmNThjYx9L4rtPuUmLsm5kCkV7AtYeqTAiVR92ZkV6lswl8fpda2oAfJkA2YjupQbw0HPh21bUEoNboZAgmjD20hMHy1TgIsWTUBrFkQAwSuqGvfO1y7bCUSSmFIjpmf2gGoEEmGPQkZllhxMRdUDJwySKUoCI8DiXiIwy1kimx1GNdQYo35mjpK9XDuPNB6nkbuN/Z+qTHWj6TEh2DN6dd4ksvQk5pckrg9+bez/5s/5jut4y2asYDeB3tSqWOE49Jiz3QBEyV7g3PYvHJ1ha39e+MpCQGl4FeJVJKkUUqm/pPnl2lLd+Dh/zfAEM8reyIR9A0VPNNvbBTaDI/A/r5xEs8TMfTw/vxO7i/L4dYkis13OW/h1YYuur9m+kfoRFm+Bp4JwRjvQ6gt2N/siHysZHa9mmB23k/HC8Qr1ZjbbIWnfBZw/OC5o="
+  on:
+    tags: true
+    repo: scrapinghub/scrapinghub-autoextract
+    condition: $TOXENV == py37

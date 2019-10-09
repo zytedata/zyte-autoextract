@@ -53,10 +53,6 @@ def _is_throttling_error(exc: Exception) -> bool:
     return isinstance(exc, ApiError) and exc.status == 429
 
 
-def _is_auth_error(exc: Exception)  -> bool:
-    return isinstance(exc, ApiError) and exc.status == 401
-
-
 autoextract_retry_condition = (
     retry_if_exception(_is_throttling_error) |
     retry_if_exception(_is_network_error)

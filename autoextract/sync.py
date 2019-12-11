@@ -10,6 +10,7 @@ import requests
 from .batching import record_order, build_query, restore_order
 from .constants import API_ENDPOINT, API_TIMEOUT
 from .apikey import get_apikey
+from .utils import user_agent
 
 
 def request_raw(query: List[Dict[str, Any]],
@@ -22,7 +23,9 @@ def request_raw(query: List[Dict[str, Any]],
     """
     auth = (get_apikey(api_key), '')
     timeout = API_TIMEOUT + 60
-    resp = requests.post(endpoint, json=query, auth=auth, timeout=timeout)
+    headers = {'User-Agent': user_agent('Sync')}
+    resp = requests.post(endpoint, json=query, auth=auth,
+                         headers=headers, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
 

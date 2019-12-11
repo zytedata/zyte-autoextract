@@ -1,20 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
 from setuptools import setup, find_packages
-
-
-def get_version():
-    about = {}
-    here = os.path.abspath(os.path.dirname(__file__))
-    with open(os.path.join(here, 'autoextract/__version__.py')) as f:
-        exec(f.read(), about)
-    return about['__version__']
-
 
 setup(
     name='scrapinghub-autoextract',
-    version=get_version(),
+    version='0.1',
     description='Python interface to Scrapinghub Automatic Extraction API',
     long_description=open('README.rst').read() + "\n\n" + open('CHANGES.rst').read(),
     author='Mikhail Korobov',

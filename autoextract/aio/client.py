@@ -14,6 +14,7 @@ from autoextract.apikey import get_apikey
 from autoextract.utils import chunks
 from .retry import autoextract_retry
 from .errors import ApiError
+from ..utils import user_agent
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -54,10 +55,11 @@ async def request_raw(query: List[Dict[str, Any]],
     requests in parallel.
     """
     auth = aiohttp.BasicAuth(get_apikey(api_key))
+    headers = {'User-Agent': user_agent('Async')}
     post = _post_func(session)
 
     async def request():
-        async with post(endpoint, json=query, auth=auth) as resp:
+        async with post(endpoint, json=query, auth=auth, headers=headers) as resp:
             if resp.status >= 400:
                 content = await resp.read()
                 resp.release()

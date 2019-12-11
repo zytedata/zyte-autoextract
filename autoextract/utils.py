@@ -8,5 +8,8 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 
-def user_agent(name):
-    return 'AutoExtract {} v{}'.format(name, __version__)
+def user_agent(library):
+    return 'scrapinghub-autoextract/{} {}/{}'.format(
+        __version__,
+        library.__name__,
+        library.__version__)

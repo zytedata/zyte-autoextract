@@ -23,7 +23,7 @@ def request_raw(query: List[Dict[str, Any]],
     """
     auth = (get_apikey(api_key), '')
     timeout = API_TIMEOUT + 60
-    headers = {'User-Agent': user_agent('Sync')}
+    headers = {'User-Agent': user_agent(requests)}
     resp = requests.post(endpoint, json=query, auth=auth,
                          headers=headers, timeout=timeout)
     resp.raise_for_status()

@@ -55,7 +55,7 @@ async def request_raw(query: List[Dict[str, Any]],
     requests in parallel.
     """
     auth = aiohttp.BasicAuth(get_apikey(api_key))
-    headers = {'User-Agent': user_agent('Async')}
+    headers = {'User-Agent': user_agent(aiohttp)}
     post = _post_func(session)
 
     async def request():

@@ -11,10 +11,9 @@ import aiohttp
 from autoextract.batching import record_order, restore_order, build_query
 from autoextract.constants import API_ENDPOINT, API_TIMEOUT
 from autoextract.apikey import get_apikey
-from autoextract.utils import chunks
+from autoextract.utils import chunks, user_agent
 from .retry import autoextract_retry
 from .errors import ApiError
-from ..utils import user_agent
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,

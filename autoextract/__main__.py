@@ -65,9 +65,9 @@ if __name__ == '__main__':
     p.add_argument("--batch-size", type=int, default=2,
                    help="batch size (default: %(default)s)")
     p.add_argument("--page-type", "-t", default="article",
-                   help="type of the pages in the input file "
-                        "(default: %(default)s)",
-                   choices=['article', 'product'])
+                   help="type of the pages in the input file, "
+                        "e.g. article, product, jobPosting "
+                        "(default: %(default)s)")
     p.add_argument("--api-key",
                    help="Scrapinghub AutoExtract API key. "
                         "You can also set %s environment variable instead "

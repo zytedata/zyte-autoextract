@@ -15,6 +15,7 @@ from .utils import user_agent
 
 def request_raw(query: List[Dict[str, Any]],
                 api_key: Optional[str] = None,
+                *,
                 endpoint: str = API_ENDPOINT,
                 ) -> List[Dict[str, Any]]:
     """ Send a request to Scrapinghub AutoExtract API.
@@ -33,6 +34,7 @@ def request_raw(query: List[Dict[str, Any]],
 def request_batch(urls: List[str],
                   page_type: str,
                   api_key: Optional[str] = None,
+                  *,
                   endpoint: str = API_ENDPOINT,
                   ) -> List[Dict]:
     query = record_order(build_query(urls, page_type))

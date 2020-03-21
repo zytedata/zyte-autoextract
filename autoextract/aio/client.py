@@ -123,8 +123,8 @@ def request_parallel(urls: List[str],
 async def request_batch(urls: List[str],
                         page_type: str,
                         api_key: Optional[str] = None,
-                        endpoint: str = API_ENDPOINT,
                         *,
+                        endpoint: str = API_ENDPOINT,
                         handle_retries: bool = True,
                         session: Optional[aiohttp.ClientSession] = None
                         ) -> List[Dict]:

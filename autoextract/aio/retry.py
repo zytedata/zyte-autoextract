@@ -12,7 +12,6 @@ from tenacity import (
     wait_fixed,
     wait_random_exponential,
     wait_random,
-    stop_after_attempt,
     stop_after_delay,
     retry_if_exception,
     RetryCallState,
@@ -93,10 +92,7 @@ class autoextract_wait_strategy(wait_base):
 class autoextract_stop_strategy(stop_base):
     def __init__(self):
         self.stop_on_throttling_error = stop_never
-        self.stop_on_network_error = (
-            stop_after_attempt(7) |
-            stop_after_delay(5 * 60)
-        )
+        self.stop_on_network_error = stop_after_delay(15 * 60)
 
     def __call__(self, retry_state: RetryCallState) -> bool:
         exc = retry_state.outcome.exception()

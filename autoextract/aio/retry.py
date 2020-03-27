@@ -4,6 +4,7 @@ AutoExtract retrying logic.
 
 TODO: add sync support; only autoextract.aio is supported at the moment.
 """
+import asyncio
 import logging
 
 from aiohttp import client_exceptions
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 _NETWORK_ERRORS = (
+    asyncio.TimeoutError,  # could happen while reading the response body
     client_exceptions.ClientResponseError,
     client_exceptions.ClientOSError,
     client_exceptions.ServerConnectionError,
@@ -75,8 +77,8 @@ class autoextract_wait_strategy(wait_base):
 
         # connection errors, other client and server failures
         self.network_wait = (
-            # wait from 5s to 1m
-            wait_fixed(5) + wait_random_exponential(multiplier=1, max=55)
+            # wait from 3s to ~1m
+            wait_random(3, 7) + wait_random_exponential(multiplier=1, max=55)
         )
 
     def __call__(self, retry_state: RetryCallState) -> float:

@@ -26,6 +26,8 @@ setup(
         'tenacity;python_version>="3.6"',
         'aiohttp >= 3.6.0;python_version>="3.6"',
         'tqdm;python_version>="3.6"',
+        'attrs',
+        'runstats',
     ],
     classifiers=[
         'Development Status :: 3 - Alpha',

@@ -76,7 +76,7 @@ AutoExtract options there. Example - store it in ``queries.jl`` file::
     {"url": "http://example.com/bar", "meta": "id2", "articleBodyRaw": false}
 
 See `API docs`_ for a description of all supported parameters in these query
-dicts. Note that the API docs mention batch requests and their limitation
+dicts. API docs mention batch requests and their limitation
 (no more than 100 queries at time); these limits don't apply to the queries.jl
 file (i.e. it may have millions of rows), as the command-line script does
 its own batching.
@@ -88,7 +88,7 @@ values are filled automatically from ``--page-type`` command line argument
 value. You can also set a different ``pageType`` for a row in ``queries.jl``
 file; it has a priority over ``--page-type`` passed in cmdline.
 
-To get results, you can then run::
+To get results for this ``queries.jl`` file, run::
 
     python -m autoextract --intype jl queries.jl --page-type article --output res.jl
 
@@ -136,7 +136,7 @@ options.
 Synchronous API
 ---------------
 
-Synchronous API provides an easy way to try autoextract in a script.
+Synchronous API provides an easy way to try AutoExtract.
 For production usage asyncio API is strongly recommended. Currently the
 synchronous API doesn't handle throttling errors, and has other limitations;
 it is most suited for quickly checking extraction results for a few URLs.
@@ -164,7 +164,7 @@ and page type, and ensures results are in the same order as requested URLs::
 asyncio API
 -----------
 
-Basic usage is similar to sync API (``request_raw``),
+Basic usage is similar to the sync API (``request_raw``),
 but asyncio event loop is used::
 
     from autoextract.aio import request_raw
@@ -203,8 +203,8 @@ connections::
 and actually uses it under the hood.
 
 Note ``from autoextract import ArticleRequest`` and its usage in the
-example above. There are several Request helper classes (TODO: document them
-better), which simplify building of the queries.
+example above. There are several Request helper classes,
+which simplify building of the queries.
 
 ``request_parallel_as_completed`` and ``request_raw`` functions handle
 throttling (http 429 errors) and network errors, retrying a request in
@@ -212,6 +212,38 @@ these cases.
 
 CLI interface implementation (``autoextract/__main__.py``) can serve
 as an usage example.
+
+Request helpers
+---------------
+
+To query AutoExtract you need to create a dict with request parameters, e.g.::
+
+    {'url': 'http://example.com.foo', 'pageType': 'article'}
+
+To simplify the library usage and avoid typos, scrapinghub-autpextract
+provides helper classes for constructing these dicts::
+
+* autoextract.Request
+* autoextract.ArticleRequest
+* autoextract.ProductRequest
+* autoextract.JobPostingRequest
+
+You can pass instances of these classes instead of dicts everywhere when
+requests dicts are accepted. So e.g. instead of writing this::
+
+    query = [{"url": url, "pageType": "article"} for url in urls]
+
+You can write this::
+
+    query = [Request(url, pageType="article") for url in urls]
+
+or this::
+
+    query = [ArticleRequest(url) for url in urls]
+
+There is one difference: ``articleBodyRaw`` parameter is set to ``false``
+by default when Request or its variants are used, while it is ``true``
+by default in the API.
 
 Contributing
 ============

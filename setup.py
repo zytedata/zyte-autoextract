@@ -17,6 +17,7 @@ setup(
     version=get_version(),
     description='Python interface to Scrapinghub Automatic Extraction API',
     long_description=open('README.rst').read() + "\n\n" + open('CHANGES.rst').read(),
+    long_description_content_type='text/x-rst',
     author='Mikhail Korobov',
     author_email='kmike84@gmail.com',
     url='https://github.com/scrapinghub/scrapinghub-autoextract',

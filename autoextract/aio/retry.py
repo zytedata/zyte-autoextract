@@ -54,9 +54,14 @@ def _is_throttling_error(exc: Exception) -> bool:
     return isinstance(exc, ApiError) and exc.status == 429
 
 
+def _is_server_error(exc: Exception) -> bool:
+    return isinstance(exc, ApiError) and exc.status >= 500
+
+
 autoextract_retry_condition = (
     retry_if_exception(_is_throttling_error) |
-    retry_if_exception(_is_network_error)
+    retry_if_exception(_is_network_error) |
+    retry_if_exception(_is_server_error)
 )
 
 
@@ -80,6 +85,7 @@ class autoextract_wait_strategy(wait_base):
             # wait from 3s to ~1m
             wait_random(3, 7) + wait_random_exponential(multiplier=1, max=55)
         )
+        self.server_wait = self.network_wait
 
     def __call__(self, retry_state: RetryCallState) -> float:
         exc = retry_state.outcome.exception()
@@ -87,6 +93,8 @@ class autoextract_wait_strategy(wait_base):
             return self.throttling_wait(retry_state=retry_state)
         elif _is_network_error(exc):
             return self.network_wait(retry_state=retry_state)
+        elif _is_server_error(exc):
+            return self.server_wait(retry_state=retry_state)
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
 
@@ -95,13 +103,16 @@ class autoextract_stop_strategy(stop_base):
     def __init__(self):
         self.stop_on_throttling_error = stop_never
         self.stop_on_network_error = stop_after_delay(15 * 60)
+        self.stop_on_server_error = self.stop_on_network_error
 
     def __call__(self, retry_state: RetryCallState) -> bool:
         exc = retry_state.outcome.exception()
         if _is_throttling_error(exc):
             return self.stop_on_throttling_error(retry_state)
-        if _is_network_error(exc):
+        elif _is_network_error(exc):
             return self.stop_on_network_error(retry_state)
+        elif _is_server_error(exc):
+            return self.stop_on_server_error(retry_state)
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
 

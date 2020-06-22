@@ -105,17 +105,13 @@ class autoextract_wait_strategy(wait_base):
         elif _is_server_error(exc):
             return self.server_wait(retry_state=retry_state)
         elif _is_domain_occupied_error(exc):
-            return self.domain_occupied_wait(retry_state=retry_state)
+            try:
+                return exc.retry_seconds
+            except ValueError as exc:
+                logger.warning(exc)
+                return 300  # 5 minutes
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
-
-    @property
-    def domain_occupied_wait(self, retry_state: RetryCallState) -> wait_base:
-        try:
-            return wait_fixed(exc.retry_seconds)
-        except ValueError as exc:
-            logger.warning(exc)
-            return wait_fixed(300)
 
 
 class autoextract_stop_strategy(stop_base):

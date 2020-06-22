@@ -42,13 +42,13 @@ class QueryError(Exception):
     @property
     def domain_occupied(self) -> Optional[str]:
         match = DOMAIN_OCCUPIED_REGEX.match(self.message)
-        return match and match.group(1)
+        return match.group(1) if match else None
 
     @property
     def retry_seconds(self) -> Optional[float]:
         match = DOMAIN_OCCUPIED_REGEX.match(self.message)
         try:
-            return match and float(match.group(2))
+            return float(match.group(2)) if match else None
         except ValueError:
             raise ValueError(
                 f"Could not extract retry seconds "

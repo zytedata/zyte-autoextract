@@ -6,7 +6,7 @@ from typing import Optional
 from aiohttp import ClientResponseError
 
 DOMAIN_OCCUPIED_REGEX = re.compile(
-    r".*domain (.*) is occupied, please retry in (.*) seconds.*",
+    r".*domain (.+) is occupied, please retry in (.+) seconds.*",
     re.IGNORECASE
 )
 

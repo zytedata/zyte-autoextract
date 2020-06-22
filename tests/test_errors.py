@@ -35,6 +35,8 @@ def test_query_error():
     ("domain example.net is occupied, please retry in 23 seconds", "example.net", 23),
     ("Domain example.com is occupied, please retry in asd seconds", "example.com", ValueError),
     ("domain example.net is occupied, please retry in xyz seconds", "example.net", ValueError),
+    ("domain example.net is occupied, please retry in  seconds", None, None),
+    ("domain example.net is occupied, please retry in seconds", None, None),
     ("foo bar", None, None),
 ))
 def test_domain_occupied_query_error(message, domain_occupied, retry_seconds):

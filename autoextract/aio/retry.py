@@ -61,7 +61,7 @@ def _is_server_error(exc: Exception) -> bool:
     return isinstance(exc, ApiError) and exc.status >= 500
 
 
-def _is_domain_occupied_error(exc: Exception) -> Optional[float]:
+def _is_domain_occupied_error(exc: Exception) -> float:
     if isinstance(exc, QueryError):
         retry_seconds = extract_retry_seconds(exc.message)
         if not retry_seconds:

@@ -24,7 +24,7 @@ def user_agent(library):
         library.__version__)
 
 
-def extract_retry_seconds(msg: Optional[str] = None) -> Optional[float]:
+def extract_retry_seconds(msg: msg) -> Optional[float]:
     """Extract retry seconds from domain occupied message."""
     match = _DOMAIN_OCCUPIED_RE.match(msg or "")
     if not match:

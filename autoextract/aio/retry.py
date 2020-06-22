@@ -68,7 +68,7 @@ def _is_domain_occupied_error(exc: Exception) -> Optional[float]:
         if not retry_seconds:
             minutes = 5
             logger.warning(
-                f"Received a malformed occupied error message :{msg}. "
+                f"Received a malformed occupied error message :{exc.message}. "
                 f"Retying after {minutes} minutes."
             )
             return timedelta(minutes=minutes).total_seconds()

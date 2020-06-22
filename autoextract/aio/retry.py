@@ -7,6 +7,8 @@ TODO: add sync support; only autoextract.aio is supported at the moment.
 import asyncio
 import logging
 
+from datetime import timedelta
+
 from aiohttp import client_exceptions
 from tenacity import (
     wait_chain,
@@ -23,7 +25,8 @@ from tenacity import (
 from tenacity.stop import stop_base, stop_never
 from tenacity.wait import wait_base
 
-from .errors import ApiError
+from .errors import ApiError, QueryError
+from ..utils import extract_retry_seconds
 
 
 logger = logging.getLogger(__name__)
@@ -56,6 +59,20 @@ def _is_throttling_error(exc: Exception) -> bool:
 
 def _is_server_error(exc: Exception) -> bool:
     return isinstance(exc, ApiError) and exc.status >= 500
+
+
+def _is_domain_occupied_error(exc: Exception) -> Optional[float]:
+    if isinstance(exc, QueryError):
+        retry_seconds = extract_retry_seconds(exc.message)
+        if not retry_seconds:
+            minutes = 5
+            logger.warning(
+                f"Received a malformed occupied error message :{msg}. "
+                f"Retying after {minutes} minutes."
+            )
+            return timedelta(minutes=minutes=).total_seconds()
+
+        return retry_seconds
 
 
 autoextract_retry_condition = (
@@ -102,6 +119,7 @@ class autoextract_wait_strategy(wait_base):
 class autoextract_stop_strategy(stop_base):
     def __init__(self):
         self.stop_on_throttling_error = stop_never
+        self.stop_on_domain_occupied_error = stop_never
         self.stop_on_network_error = stop_after_delay(15 * 60)
         self.stop_on_server_error = self.stop_on_network_error
 
@@ -113,6 +131,8 @@ class autoextract_stop_strategy(stop_base):
             return self.stop_on_network_error(retry_state)
         elif _is_server_error(exc):
             return self.stop_on_server_error(retry_state)
+        elif _is_domain_occupied_error(exc):
+            return self.stop_on_domain_occupied_error(retry_state)
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
 

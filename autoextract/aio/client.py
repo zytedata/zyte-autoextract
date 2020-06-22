@@ -15,7 +15,7 @@ from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
 from .retry import autoextract_retry
-from .errors import ApiError
+from .errors import ApiError, QueryError
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -135,7 +135,14 @@ async def request_raw(query: Query,
     result.response_stats = response_stats
     if handle_retries:
         result.retry_stats = request.retry.statistics  # type: ignore
+
     agg_stats.n_results += 1
+
+    for r in result:
+        if "error" in r:
+            # https://doc.scrapinghub.com/autoextract.html#query-level
+            raise QueryError(r["query"], r["error"])
+
     return result
 
 

@@ -6,6 +6,7 @@ TODO: add sync support; only autoextract.aio is supported at the moment.
 """
 import asyncio
 import logging
+import re
 
 from datetime import timedelta
 from typing import Optional
@@ -27,7 +28,6 @@ from tenacity.stop import stop_base, stop_never
 from tenacity.wait import wait_base
 
 from .errors import ApiError, QueryError
-from ..utils import extract_retry_seconds
 
 
 logger = logging.getLogger(__name__)
@@ -62,18 +62,8 @@ def _is_server_error(exc: Exception) -> bool:
     return isinstance(exc, ApiError) and exc.status >= 500
 
 
-def _is_domain_occupied_error(exc: Exception) -> Optional[float]:
-    if isinstance(exc, QueryError):
-        retry_seconds = extract_retry_seconds(exc.message)
-        if not retry_seconds:
-            minutes = 5
-            logger.warning(
-                f"Received a malformed occupied error message :{exc.message}. "
-                f"Retying after {minutes} minutes."
-            )
-            return timedelta(minutes=minutes).total_seconds()
-
-        return retry_seconds
+def _is_domain_occupied_error(exc: Exception) -> bool:
+    return isinstance(exc, QueryError) and bool(exc.domain_occupied)
 
 
 autoextract_retry_condition = (

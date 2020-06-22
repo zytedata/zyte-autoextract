@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from contextlib import suppress
+
 import pytest
 
 from autoextract.aio.errors import QueryError
@@ -31,8 +33,8 @@ def test_query_error():
     ("domain example.net is occupied, please retry in 23.5 seconds", "example.net", 23.5),
     ("Domain example.com is occupied, please retry in 23 seconds", "example.com", 23),
     ("domain example.net is occupied, please retry in 23 seconds", "example.net", 23),
-    ("Domain example.com is occupied, please retry in asd seconds", "example.com", 300.0),
-    ("domain example.net is occupied, please retry in xyz seconds", "example.net", 300.0),
+    ("Domain example.com is occupied, please retry in asd seconds", "example.com", ValueError),
+    ("domain example.net is occupied, please retry in xyz seconds", "example.net", ValueError),
     ("foo bar", None, None),
 ))
 def test_domain_occupied_query_error(message, domain_occupied, retry_seconds):
@@ -41,4 +43,9 @@ def test_domain_occupied_query_error(message, domain_occupied, retry_seconds):
     assert exc.query == response["query"]
     assert exc.message == response["error"]
     assert exc.domain_occupied == domain_occupied
-    assert exc.retry_seconds == retry_seconds
+
+    if isinstance(retry_seconds, type) and issubclass(retry_seconds, Exception):
+        with pytest.raises(retry_seconds):
+            exc.retry_seconds
+    else:
+        assert exc.retry_seconds == retry_seconds

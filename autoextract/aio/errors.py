@@ -1,14 +1,9 @@
 # -*- coding: utf-8 -*-
-import logging
 import re
 from datetime import timedelta
 from typing import Optional
 
 from aiohttp import ClientResponseError
-
-
-logger = logging.getLogger(__name__)
-
 
 DOMAIN_OCCUPIED_REGEX = re.compile(
     r".*domain (.*) is occupied, please retry in (.*) seconds.*",
@@ -37,8 +32,6 @@ class QueryError(Exception):
     https://doc.scrapinghub.com/autoextract.html#query-level
     """
 
-    RETRY_MINUTES = 5
-
     def __init__(self, query: dict, message: str):
         self.query = query
         self.message = message
@@ -52,14 +45,12 @@ class QueryError(Exception):
         return match and match.group(1)
 
     @property
-    def retry_seconds(self):
+    def retry_seconds(self) -> Optional[float]:
         match = DOMAIN_OCCUPIED_REGEX.match(self.message)
-
         try:
             return match and float(match.group(2))
-        except (TypeError, ValueError):
-            logger.warning(
+        except ValueError:
+            raise ValueError(
                 f"Could not extract retry seconds "
                 f"from Domain Occupied error message: {self.message}"
             )
-            return timedelta(minutes=self.RETRY_MINUTES).total_seconds()

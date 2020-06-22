@@ -69,7 +69,8 @@ def _is_domain_occupied_error(exc: Exception) -> bool:
 autoextract_retry_condition = (
     retry_if_exception(_is_throttling_error) |
     retry_if_exception(_is_network_error) |
-    retry_if_exception(_is_server_error)
+    retry_if_exception(_is_server_error) |
+    retry_if_exception(_is_domain_occupied_error)
 )
 
 
@@ -103,8 +104,18 @@ class autoextract_wait_strategy(wait_base):
             return self.network_wait(retry_state=retry_state)
         elif _is_server_error(exc):
             return self.server_wait(retry_state=retry_state)
+        elif _is_domain_occupied_error(exc):
+            return self.domain_occupied_wait(retry_state=retry_state)
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
+
+    @property
+    def domain_occupied_wait(self, retry_state: RetryCallState) -> wait_base:
+        try:
+            return wait_fixed(exc.retry_seconds)
+        except ValueError as exc:
+            logger.warning(exc)
+            return wait_fixed(300)
 
 
 class autoextract_stop_strategy(stop_base):

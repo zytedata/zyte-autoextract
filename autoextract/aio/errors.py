@@ -22,7 +22,7 @@ class QueryError(Exception):
     """ Exception which is raised when a Query-level error is returned.
     https://doc.scrapinghub.com/autoextract.html#query-level
     """
-    def __init__(self, query: List, message: str):
+    def __init__(self, query: dict, message: str):
         self.query = query
         self.message = message
 

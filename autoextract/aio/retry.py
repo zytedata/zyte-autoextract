@@ -70,7 +70,7 @@ def _is_domain_occupied_error(exc: Exception) -> Optional[float]:
                 f"Received a malformed occupied error message :{msg}. "
                 f"Retying after {minutes} minutes."
             )
-            return timedelta(minutes=minutes=).total_seconds()
+            return timedelta(minutes=minutes).total_seconds()
 
         return retry_seconds
 

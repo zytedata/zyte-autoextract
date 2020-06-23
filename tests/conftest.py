@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 import os
-import sys
 
 from autoextract.apikey import ENV_VARIABLE
-
-
-collect_ignore = []
-if sys.version_info < (3, 6):
-    # Async support depends on Python 3.6+
-    collect_ignore.append('test_aio/')
 
 
 @pytest.fixture()

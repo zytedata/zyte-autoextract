@@ -131,7 +131,7 @@ async def request_raw(query: Query,
 
                 pending_queries.clear()
                 for query_result in response:
-                    if "error" in query_result:
+                    if handle_retries and "error" in query_result:
                         query_exception = QueryError(
                             query=query_result["query"],
                             message=query_result["error"]

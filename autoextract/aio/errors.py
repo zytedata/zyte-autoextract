@@ -4,31 +4,6 @@ from typing import Optional
 
 from aiohttp import ClientResponseError
 
-DOMAIN_OCCUPIED_REGEX = re.compile(
-    r".*domain (.+) is occupied, please retry in (.+) seconds.*",
-    re.IGNORECASE
-)
-
-RETRIABLE_QUERY_ERROR_MESSAGES = {
-        msg.lower().strip()
-        for msg in [
-            "query timed out",
-            "Downloader error: No response (network5)",
-            "Downloader error: http50",
-            "Downloader error: GlobalTimeoutError",
-            "Proxy error: banned",
-            "Proxy error: internal_error",
-            "Proxy error: nxdomain",
-            "Proxy error: timeout",
-            "Proxy error: ssl_tunnel_error",
-            "Proxy error: msgtimeout",
-            "Proxy error: econnrefused",
-            # Retry errors for AutoExtract API dev server
-            "Error making splash request: ServerDisconnectedError",
-            "Error making splash request: ClientOSError: [Errno 32] Broken pipe",
-        ]
-    }
-
 
 # FIXME: rename to RequestError (?)
 class ApiError(ClientResponseError):
@@ -51,6 +26,31 @@ class QueryError(Exception):
     https://doc.scrapinghub.com/autoextract.html#query-level
     """
 
+    DOMAIN_OCCUPIED_REGEX = re.compile(
+        r".*domain (.+) is occupied, please retry in (.+) seconds.*",
+        re.IGNORECASE
+    )
+
+    RETRIABLE_QUERY_ERROR_MESSAGES = {
+        msg.lower().strip()
+        for msg in [
+            "query timed out",
+            "Downloader error: No response (network5)",
+            "Downloader error: http50",
+            "Downloader error: GlobalTimeoutError",
+            "Proxy error: banned",
+            "Proxy error: internal_error",
+            "Proxy error: nxdomain",
+            "Proxy error: timeout",
+            "Proxy error: ssl_tunnel_error",
+            "Proxy error: msgtimeout",
+            "Proxy error: econnrefused",
+            # Retry errors for AutoExtract API dev server
+            "Error making splash request: ServerDisconnectedError",
+            "Error making splash request: ClientOSError: [Errno 32] Broken pipe",
+        ]
+    }
+
     def __init__(self, query: dict, message: str):
         self.query = query
         self.message = message
@@ -63,16 +63,16 @@ class QueryError(Exception):
         if self.domain_occupied:
             return True
 
-        return self.message.lower() in RETRIABLE_QUERY_ERROR_MESSAGES
+        return self.message.lower() in self.RETRIABLE_QUERY_ERROR_MESSAGES
 
     @property
     def domain_occupied(self) -> Optional[str]:
-        match = DOMAIN_OCCUPIED_REGEX.match(self.message)
+        match = self.DOMAIN_OCCUPIED_REGEX.match(self.message)
         return match.group(1) if match else None
 
     @property
     def retry_seconds(self) -> Optional[float]:
-        match = DOMAIN_OCCUPIED_REGEX.match(self.message)
+        match = self.DOMAIN_OCCUPIED_REGEX.match(self.message)
         try:
             return float(match.group(2)) if match else None
         except ValueError:

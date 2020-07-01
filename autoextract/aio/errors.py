@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-from datetime import timedelta
 from typing import Optional
 
 from aiohttp import ClientResponseError
@@ -32,12 +31,40 @@ class QueryError(Exception):
     https://doc.scrapinghub.com/autoextract.html#query-level
     """
 
+    RETRIABLE_QUERY_ERROR_MESSAGES = {
+        msg.lower().strip()
+        for msg in [
+            "query timed out",
+            "Downloader error: No response (network5)",
+            "Downloader error: http50",
+            "Downloader error: GlobalTimeoutError",
+            "Proxy error: banned",
+            "Proxy error: internal_error",
+            "Proxy error: nxdomain",
+            "Proxy error: timeout",
+            "Proxy error: ssl_tunnel_error",
+            "Proxy error: msgtimeout",
+            "Proxy error: econnrefused",
+            # Retry errors for AutoExtract API dev server
+            "Error making splash request: ServerDisconnectedError",
+            "Error making splash request: ClientOSError: [Errno 32] Broken pipe",
+            "Downloader error: http404",
+        ]
+    }
+
     def __init__(self, query: dict, message: str):
         self.query = query
         self.message = message
 
     def __str__(self):
         return f"QueryError: query={self.query}, message={self.message}"
+
+    @property
+    def retriable(self) -> bool:
+        if self.domain_occupied:
+            return True
+
+        return self.message.lower() in self.RETRIABLE_QUERY_ERROR_MESSAGES
 
     @property
     def domain_occupied(self) -> Optional[str]:

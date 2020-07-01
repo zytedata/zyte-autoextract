@@ -77,13 +77,20 @@ async def request_raw(query: Query,
     """
     if agg_stats is None:
         agg_stats = AggStats()  # dummy stats, to simplify code
+
+    pending_queries = query_as_dict_list(query)
+    query_results = list()
+
     post = _post_func(session)
-    post_kwargs = dict(
-        url=endpoint,
-        json=query_as_dict_list(query),
-        auth=aiohttp.BasicAuth(get_apikey(api_key)),
-        headers={'User-Agent': user_agent(aiohttp)},
-    )
+
+    def get_post_kwargs():
+        return dict(
+            url=endpoint,
+            json=pending_queries,
+            auth=aiohttp.BasicAuth(get_apikey(api_key)),
+            headers={'User-Agent': user_agent(aiohttp)},
+        )
+
     response_stats = []
     start_global = time.perf_counter()
 
@@ -91,7 +98,7 @@ async def request_raw(query: Query,
         stats = ResponseStats.create(start_global)
         agg_stats.n_attempts += 1
         try:
-            async with post(**post_kwargs) as resp:
+            async with post(**get_post_kwargs()) as resp:
                 stats.status = resp.status
                 stats.record_connected(agg_stats)
                 if resp.status >= 400:
@@ -114,7 +121,31 @@ async def request_raw(query: Query,
                 # good response
                 response = await resp.json()
                 stats.record_read(agg_stats)
-                return response
+
+                query_exceptions = list()
+
+                pending_queries.clear()
+                for query_result in response:
+                    if "error" in query_result:
+                        query_exception = QueryError(
+                            query=query_result["query"],
+                            message=query_result["error"]
+                        )
+                        if query_exception.retriable:
+                            query_exceptions.append(query_exception)
+                            user_query = query_result["query"]["userQuery"]
+                            pending_queries.append(user_query)
+                            continue
+
+                    query_results.append(query_result)
+
+                if query_exceptions:
+                    raise max(
+                        query_exceptions,
+                        key=lambda exc: exc.retry_seconds or 0
+                    )
+
+                return query_results
         except Exception as e:
             if not isinstance(e, ApiError):
                 agg_stats.n_errors += 1
@@ -137,13 +168,6 @@ async def request_raw(query: Query,
         result.retry_stats = request.retry.statistics  # type: ignore
 
     agg_stats.n_results += 1
-
-    # FIXME: get longest timeout
-    for r in result:
-        if "error" in r:
-            # https://doc.scrapinghub.com/autoextract.html#query-level
-            raise QueryError(r["query"], r["error"])
-
     return result
 
 

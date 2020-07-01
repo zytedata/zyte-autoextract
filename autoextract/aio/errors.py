@@ -5,8 +5,7 @@ from typing import Optional
 from aiohttp import ClientResponseError
 
 
-# FIXME: rename to RequestError (?)
-class ApiError(ClientResponseError):
+class RequestError(ClientResponseError):
     """ Exception which is raised when Request-level error is returned.
     In contrast with ClientResponseError, it allows to inspect response
     content.

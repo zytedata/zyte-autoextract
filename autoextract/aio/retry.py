@@ -27,7 +27,7 @@ from tenacity import (
 from tenacity.stop import stop_base, stop_never
 from tenacity.wait import wait_base
 
-from .errors import ApiError, QueryError
+from .errors import RequestError, QueryError
 
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ _NETWORK_ERRORS = (
 
 
 def _is_network_error(exc: Exception) -> bool:
-    if isinstance(exc, ApiError):
+    if isinstance(exc, RequestError):
         # ApiError is ClientResponseError, which is in the
         # _NETWORK_ERRORS list, but it should be handled
         # separately.
@@ -55,11 +55,11 @@ def _is_network_error(exc: Exception) -> bool:
 
 
 def _is_throttling_error(exc: Exception) -> bool:
-    return isinstance(exc, ApiError) and exc.status == 429
+    return isinstance(exc, RequestError) and exc.status == 429
 
 
 def _is_server_error(exc: Exception) -> bool:
-    return isinstance(exc, ApiError) and exc.status >= 500
+    return isinstance(exc, RequestError) and exc.status >= 500
 
 
 def _is_retriable_query_error(exc: Exception) -> bool:

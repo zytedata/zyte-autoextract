@@ -15,7 +15,7 @@ from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
 from .retry import autoextract_retry
-from .errors import ApiError, QueryError
+from .errors import RequestError, QueryError
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -110,7 +110,7 @@ async def request_raw(query: Query,
                         agg_stats.n_429 += 1
                     else:
                         agg_stats.n_errors += 1
-                    raise ApiError(
+                    raise RequestError(
                         request_info=resp.request_info,
                         history=resp.history,
                         status=resp.status,
@@ -147,7 +147,7 @@ async def request_raw(query: Query,
 
                 return query_results
         except Exception as e:
-            if not isinstance(e, ApiError):
+            if not isinstance(e, RequestError):
                 agg_stats.n_errors += 1
             raise
         finally:

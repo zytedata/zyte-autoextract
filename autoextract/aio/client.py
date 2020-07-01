@@ -61,11 +61,16 @@ async def request_raw(query: Query,
 
     When handle_retries is True, this function can raise
 
-    1) autoextract.errors.ApiError, if there is an error returned by the API
-       which is not a throttling response (e.g. it can be raised for incorrect
-       request).
-    2) tenacity.RetryError, if a network-related error persists for
-       a long time, over the allowed time period.
+    1) autoextract.errors.RequestError,
+       if there is a Request-level error returned by the API
+       which is not a throttling response
+       (e.g. it can be raised for incorrect request).
+    2) autoextract.errors.QueryError,
+       if there is a Query-level error returned by the API
+       (e.g. it can be raised for temporary failures or rate limits).
+    3) tenacity.RetryError,
+       if a network-related error persists for a long time,
+       over the allowed time period.
 
     Throttling errors are retried indefinitely when handle_retries is True.
 

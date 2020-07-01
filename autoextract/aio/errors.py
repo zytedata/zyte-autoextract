@@ -48,7 +48,6 @@ class QueryError(Exception):
             # Retry errors for AutoExtract API dev server
             "Error making splash request: ServerDisconnectedError",
             "Error making splash request: ClientOSError: [Errno 32] Broken pipe",
-            "Downloader error: http404",
         ]
     }
 

@@ -66,10 +66,15 @@ def _is_retriable_query_error(exc: Exception) -> bool:
     return isinstance(exc, QueryError) and exc.retriable
 
 
+def _is_domain_occupied_query_error(exc: Exception) -> bool:
+    return isinstance(exc, QueryError) and exc.domain_occupied
+
+
 autoextract_retry_condition = (
     retry_if_exception(_is_throttling_error) |
     retry_if_exception(_is_network_error) |
     retry_if_exception(_is_server_error) |
+    retry_if_exception(_is_domain_occupied_query_error) |
     retry_if_exception(_is_retriable_query_error)
 )
 
@@ -121,9 +126,10 @@ class autoextract_wait_strategy(wait_base):
 class autoextract_stop_strategy(stop_base):
     def __init__(self):
         self.stop_on_throttling_error = stop_never
-        self.stop_on_retriable_query_error = stop_never
         self.stop_on_network_error = stop_after_delay(15 * 60)
         self.stop_on_server_error = self.stop_on_network_error
+        self.stop_on_retriable_query_error = self.stop_on_network_error
+        self.stop_on_domain_occupied_query_error = stop_never
 
     def __call__(self, retry_state: RetryCallState) -> bool:
         exc = retry_state.outcome.exception()
@@ -133,6 +139,8 @@ class autoextract_stop_strategy(stop_base):
             return self.stop_on_network_error(retry_state)
         elif _is_server_error(exc):
             return self.stop_on_server_error(retry_state)
+        elif _is_domain_occupied_query_error(exc):
+            return self.stop_on_domain_occupied_query_error(retry_state)
         elif _is_retriable_query_error(exc):
             return self.stop_on_retriable_query_error(retry_state)
         else:

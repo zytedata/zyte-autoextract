@@ -8,6 +8,7 @@ from functools import partial
 import time
 
 import aiohttp
+from tenacity import RetryError
 
 from autoextract.constants import API_ENDPOINT, API_TIMEOUT
 from autoextract.apikey import get_apikey
@@ -85,6 +86,7 @@ async def request_raw(query: Query,
 
     pending_queries = query_as_dict_list(query)
     query_results = list()
+    query_errors = list()
 
     post = _post_func(session)
 
@@ -130,6 +132,7 @@ async def request_raw(query: Query,
                 query_exceptions = list()
 
                 pending_queries.clear()
+                query_errors.clear()
                 for query_result in response:
                     if handle_retries and "error" in query_result:
                         query_exception = QueryError(
@@ -140,6 +143,7 @@ async def request_raw(query: Query,
                             query_exceptions.append(query_exception)
                             user_query = query_result["query"]["userQuery"]
                             pending_queries.append(user_query)
+                            query_errors.append(query_result)
                             continue
 
                     query_results.append(query_result)
@@ -163,6 +167,11 @@ async def request_raw(query: Query,
 
     try:
         result = await request()
+    except RetryError as exc:
+        if not isinstance(exc.args[0].exception(), QueryError):
+            raise
+
+        result = query_results + query_errors
     except Exception:
         agg_stats.n_fatal_errors += 1
         raise

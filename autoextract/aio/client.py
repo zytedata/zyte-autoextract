@@ -168,10 +168,14 @@ async def request_raw(query: Query,
     try:
         result = await request()
     except RetryError as exc:
-        if not isinstance(exc.args[0].exception(), QueryError):
+        if isinstance(exc.args[0].exception(), QueryError):
+            # Combine successful queries with failures
+            # in order to return whatever is possible
+            result = query_results + query_errors
+        else:
+            # Raise the exception again so that it will be captured
+            # by the general condition below
             raise
-
-        result = query_results + query_errors
     except Exception:
         agg_stats.n_fatal_errors += 1
         raise

@@ -107,12 +107,13 @@ class autoextract_wait_strategy(wait_base):
             return self.server_wait(retry_state=retry_state)
         elif _is_retriable_query_error(exc):
             try:
-                wait = exc.retry_seconds
+                wait = exc.retry_seconds or 0
             except ValueError as exc:
+                # Malformed domain occupied error message
                 logger.warning(exc)
-                return 300  # 5 minutes
+                wait = 300  # 5 minutes
 
-            return wait or self.retriable_wait(retry_state=retry_state)
+            return max(wait, self.retriable_wait(retry_state=retry_state))
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
 

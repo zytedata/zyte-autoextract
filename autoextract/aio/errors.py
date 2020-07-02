@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+import logging
 import re
 from typing import Optional
 
 from aiohttp import ClientResponseError
+
+logger = logging.getLogger(__name__)
 
 
 class RequestError(ClientResponseError):
@@ -75,7 +78,8 @@ class QueryError(Exception):
         try:
             return float(match.group(2)) if match else None
         except ValueError:
-            raise ValueError(
+            logger.warning(
                 f"Could not extract retry seconds "
                 f"from Domain Occupied error message: {self.message}"
             )
+            return 5 * 60  # 5 minutes

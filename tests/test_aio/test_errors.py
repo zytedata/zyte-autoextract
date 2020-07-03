@@ -42,12 +42,14 @@ def test_query_error(message, retriable):
     assert exc.message == query_error["error"]
     assert exc.retriable is retriable
     assert exc.domain_occupied is None
+    assert str(exc) == f"QueryError: query={exc.query}, message={exc.message}"
 
     exc = QueryError(query=query_error["query"], message=query_error["error"])
     assert exc.query == query_error["query"]
     assert exc.message == query_error["error"]
     assert exc.retriable is retriable
     assert exc.domain_occupied is None
+    assert str(exc) == f"QueryError: query={exc.query}, message={exc.message}"
 
 
 @pytest.mark.parametrize("message, domain, retry_seconds", (
@@ -64,6 +66,7 @@ def test_domain_occupied_query_error(message, domain, retry_seconds):
     assert exc.domain_occupied.domain == domain
     assert exc.domain_occupied.retry_seconds == retry_seconds
     assert exc.retry_seconds == retry_seconds
+    assert exc.retriable is True
 
 
 @pytest.mark.parametrize("message", (

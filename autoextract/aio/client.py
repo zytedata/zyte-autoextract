@@ -109,7 +109,11 @@ class RequestProcessor:
         )
 
     def get_latest_results(self):
-        """Get latest results (errors + successes)"""
+        """Get latest results (errors + successes).
+
+        This method could be used to retrieve results
+        when an exception is raised while processing results.
+        """
         return self._query_successes + self._temp_query_errors
 
     def process_results(self, query_results):

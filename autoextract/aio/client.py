@@ -56,7 +56,7 @@ class RequestProcessor:
         """Clear temporary variables between retries"""
         self.pending_queries = list()
         self._query_errors = list()
-        self._query_exceptions = list()
+        self._retriable_query_exceptions = list()
 
     def _process_error(self, query_result):
         """Process Query-level error.
@@ -70,7 +70,7 @@ class RequestProcessor:
         if not query_exception.retriable:
             return False
 
-        self._query_exceptions.append(query_exception)
+        self._retriable_query_exceptions.append(query_exception)
         user_query = query_result["query"]["userQuery"]
         self.pending_queries.append(user_query)
         self._query_errors.append(query_result)
@@ -84,7 +84,7 @@ class RequestProcessor:
         have retry seconds defined.
         """
         return max(
-            self._query_exceptions,
+            self._retriable_query_exceptions,
             key=lambda exc: exc.retry_seconds or 0
         )
 
@@ -127,7 +127,7 @@ class RequestProcessor:
 
             self._query_successes.append(query_result)
 
-        if self._query_exceptions:
+        if self._retriable_query_exceptions:
             raise self._get_exception_with_longest_timeout()
 
         return self.get_latest_results()

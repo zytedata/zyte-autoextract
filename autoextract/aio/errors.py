@@ -88,6 +88,10 @@ class QueryError(Exception):
     def __str__(self):
         return f"QueryError: query={self.query}, message={self.message}"
 
+    @classmethod
+    def from_query_result(cls, query_result: dict):
+        return cls(query=query_result["query"], message=query_result["error"])
+
     @property
     def retriable(self) -> bool:
         if self.domain_occupied:

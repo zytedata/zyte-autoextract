@@ -58,23 +58,13 @@ class RequestProcessor:
         self._query_errors = list()
         self._retriable_query_exceptions = list()
 
-    def _process_error(self, query_result):
-        """Process Query-level error.
-
-        Return True if error is retriable or False otherwise.
-        """
-        query_exception = QueryError(
-            query=query_result["query"],
-            message=query_result["error"]
-        )
-        if not query_exception.retriable:
-            return False
-
+    def _process_error(self, query_result, query_exception):
+        """Process Query-level error"""
+        self._query_errors.append(query_result)
         self._retriable_query_exceptions.append(query_exception)
+
         user_query = query_result["query"]["userQuery"]
         self.pending_queries.append(user_query)
-        self._query_errors.append(query_result)
-        return True
 
     def _get_exception_with_longest_timeout(self):
         """Get the QueryError exception with the longest timeout.
@@ -122,7 +112,9 @@ class RequestProcessor:
         self._reset()
         for query_result in query_results:
             if self._handle_retries and "error" in query_result:
-                if self._process_error(query_result):
+                query_exception = QueryError.from_query_result(query_result)
+                if query_exception.retriable:
+                    self._process_error(query_result, query_exception)
                     continue
 
             self._query_successes.append(query_result)

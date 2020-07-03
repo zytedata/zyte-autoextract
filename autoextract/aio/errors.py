@@ -60,9 +60,9 @@ class QueryError(Exception):
     https://doc.scrapinghub.com/autoextract.html#query-level
     """
 
-    RETRIABLE_QUERY_ERROR_MESSAGES = {
-        msg.lower().strip()
-        for msg in [
+    RETRIABLE_MESSAGES = {
+        message.lower().strip()
+        for message in [
             "query timed out",
             "Downloader error: No response (network5)",
             "Downloader error: http50",
@@ -97,7 +97,7 @@ class QueryError(Exception):
         if self.domain_occupied:
             return True
 
-        return self.message.lower().strip() in self.RETRIABLE_QUERY_ERROR_MESSAGES
+        return self.message.lower().strip() in self.RETRIABLE_MESSAGES
 
     @property
     def retry_seconds(self) -> Optional[float]:

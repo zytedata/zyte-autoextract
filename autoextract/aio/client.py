@@ -15,7 +15,7 @@ from autoextract.apikey import get_apikey
 from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
-from .retry import autoextract_retry
+from .retry import autoextract_retry, QueryRetryError
 from .errors import RequestError, QueryError
 
 
@@ -223,15 +223,10 @@ async def request_raw(query: Query,
 
     try:
         result = await request()
-    except RetryError as exc:
-        if isinstance(exc.args[0].exception(), QueryError):
-            # Get latest results combining error and successes
-            # in order to return whatever is possible
-            result = request_processor.get_latest_results()
-        else:
-            # Raise the exception again so that it will be captured
-            # by the general condition below
-            raise
+    except QueryRetryError:
+        # Get latest results combining error and successes
+        # in order to return whatever is possible
+        result = request_processor.get_latest_results()
     except Exception:
         agg_stats.n_fatal_errors += 1
         raise

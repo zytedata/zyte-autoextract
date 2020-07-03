@@ -20,6 +20,7 @@ from tenacity import (
     stop_after_delay,
     retry_if_exception,
     RetryCallState,
+    RetryError,
     retry,
     before_sleep_log,
     after_log,
@@ -27,7 +28,7 @@ from tenacity import (
 from tenacity.stop import stop_base, stop_never
 from tenacity.wait import wait_base
 
-from .errors import RequestError, QueryError
+from .errors import RequestError, QueryError, QueryRetryError
 
 
 logger = logging.getLogger(__name__)
@@ -143,10 +144,19 @@ class autoextract_stop_strategy(stop_base):
             raise RuntimeError("Invalid retry state exception: %s" % exc)
 
 
+def _exception_factory(fut):
+    exc = fut.exception()
+    if isinstance(exc, QueryError):
+        return QueryRetryError(fut)
+
+    return RetryError(fut)
+
+
 autoextract_retry = retry(
     wait=autoextract_wait_strategy(),
     retry=autoextract_retry_condition,
     stop=autoextract_stop_strategy(),
     before_sleep=before_sleep_log(logger, logging.DEBUG),
     after=after_log(logger, logging.DEBUG),
+    retry_error_cls=_exception_factory,
 )

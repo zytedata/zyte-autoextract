@@ -4,6 +4,7 @@ import re
 from typing import Optional
 
 from aiohttp import ClientResponseError
+from tenacity import RetryError
 
 logger = logging.getLogger(__name__)
 
@@ -103,3 +104,8 @@ class QueryError(Exception):
     def retry_seconds(self) -> Optional[float]:
         if self.domain_occupied:
             return self.domain_occupied.retry_seconds
+
+
+class QueryRetryError(RetryError):
+    """A Tenacity's RetryError caused by a QueryError"""
+    pass

@@ -21,7 +21,7 @@ class DomainOccupied:
         self.retry_seconds = retry_seconds
 
     @classmethod
-    def from_message(cls, message: str):
+    def from_message(cls, message: str) -> Optional["DomainOccupied"]:
         match = cls.DOMAIN_OCCUPIED_REGEX.match(message)
         if not match:
             return

@@ -66,18 +66,6 @@ class RequestProcessor:
         user_query = query_result["query"]["userQuery"]
         self.pending_queries.append(user_query)
 
-    def _get_exception_with_longest_timeout(self):
-        """Get the QueryError exception with the longest timeout.
-
-        If an exception doesn't have a timeout (retry seconds),
-        consider it as being zero and prioritize the ones that
-        have retry seconds defined.
-        """
-        return max(
-            self._retriable_query_exceptions,
-            key=lambda exc: exc.retry_seconds or 0
-        )
-
     def get_latest_results(self):
         """Get latest results (errors + successes).
 
@@ -120,7 +108,13 @@ class RequestProcessor:
             self._query_successes.append(query_result)
 
         if self._retriable_query_exceptions:
-            raise self._get_exception_with_longest_timeout()
+            # Prioritize exceptions that have retry seconds defined
+            # and get the one with the longest timeout value
+            exception_with_longest_timeout = max(
+                self._retriable_query_exceptions,
+                key=lambda exc: exc.retry_seconds or 0
+            )
+            raise exception_with_longest_timeout
 
         return self.get_latest_results()
 

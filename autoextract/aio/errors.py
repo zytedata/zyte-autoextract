@@ -65,7 +65,7 @@ class QueryError(Exception):
         if self.domain_occupied:
             return True
 
-        return self.message.lower() in self.RETRIABLE_QUERY_ERROR_MESSAGES
+        return self.message.lower().strip() in self.RETRIABLE_QUERY_ERROR_MESSAGES
 
     @property
     def domain_occupied(self) -> Optional[str]:

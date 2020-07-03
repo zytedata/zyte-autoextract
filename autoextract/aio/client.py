@@ -49,13 +49,13 @@ class RequestProcessor:
         self._reset()
         self.pending_queries = query_as_dict_list(query)
         self._handle_retries = handle_retries
-        self._query_successes = list()
+        self._query_successes: List[Dict] = list()
 
     def _reset(self):
         """Clear temporary variables between retries"""
-        self.pending_queries = list()
-        self._query_errors = list()
-        self._retriable_query_exceptions = list()
+        self.pending_queries: List[Dict] = list()
+        self._query_errors: List[Dict] = list()
+        self._retriable_query_exceptions: List[Dict] = list()
 
     def _process_error(self, query_result, query_exception):
         """Process Query-level error"""

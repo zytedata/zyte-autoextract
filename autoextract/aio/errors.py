@@ -16,6 +16,8 @@ class DomainOccupied:
         re.IGNORECASE
     )
 
+    DEFAULT_RETRY_SECONDS = 5 * 60  # 5 minutes
+
     def __init__(self, domain: str, retry_seconds: float):
         self.domain = domain
         self.retry_seconds = retry_seconds
@@ -24,19 +26,18 @@ class DomainOccupied:
     def from_message(cls, message: str) -> Optional["DomainOccupied"]:
         match = cls.DOMAIN_OCCUPIED_REGEX.match(message)
         if not match:
-            return
+            return None
 
         domain = match.group(1)
-        retry_seconds = match.group(2)
 
         try:
-            retry_seconds = float(retry_seconds)
+            retry_seconds = float(match.group(2))
         except ValueError:
             logger.warning(
                 f"Could not extract retry seconds "
                 f"from Domain Occupied error message: {message}"
             )
-            retry_seconds = 5 * 60  # 5 minutes
+            retry_seconds = cls.DEFAULT_RETRY_SECONDS
 
         return cls(domain=domain, retry_seconds=retry_seconds)
 

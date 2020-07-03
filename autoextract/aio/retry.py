@@ -64,7 +64,7 @@ def _is_retriable_query_error(exc: Exception) -> bool:
 
 
 def _is_domain_occupied_query_error(exc: Exception) -> bool:
-    return isinstance(exc, QueryError) and exc.domain_occupied
+    return isinstance(exc, QueryError) and exc.domain_occupied is not None
 
 
 autoextract_retry_condition = (

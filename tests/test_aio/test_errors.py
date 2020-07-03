@@ -18,13 +18,35 @@ def get_query_error(message):
     }
 
 
-def test_query_error():
-    message = "Downloader error: http404"
-    response = get_query_error(message)
-    exc = QueryError(response["query"], response["error"])
-    assert exc.query == response["query"]
-    assert exc.message == response["error"]
-    assert exc.retriable is False
+@pytest.mark.parametrize("message, retriable", (
+        ("Downloader error: http404", False),
+        ("query timed out", True),
+        ("Downloader error: No response (network5)", True),
+        ("Downloader error: http50", True),
+        ("Downloader error: GlobalTimeoutError", True),
+        ("Proxy error: banned", True),
+        ("Proxy error: internal_error", True),
+        ("Proxy error: nxdomain", True),
+        ("Proxy error: timeout", True),
+        ("Proxy error: ssl_tunnel_error", True),
+        ("Proxy error: msgtimeout", True),
+        ("Proxy error: econnrefused", True),
+        # Retry errors for AutoExtract API dev server
+        ("Error making splash request: ServerDisconnectedError", True),
+        ("Error making splash request: ClientOSError: [Errno 32] Broken pipe", True),
+))
+def test_query_error(message, retriable):
+    query_error = get_query_error(message)
+    exc = QueryError.from_query_result(query_error)
+    assert exc.query == query_error["query"]
+    assert exc.message == query_error["error"]
+    assert exc.retriable is retriable
+    assert exc.domain_occupied is None
+
+    exc = QueryError(query=query_error["query"], message=query_error["error"])
+    assert exc.query == query_error["query"]
+    assert exc.message == query_error["error"]
+    assert exc.retriable is retriable
     assert exc.domain_occupied is None
 
 

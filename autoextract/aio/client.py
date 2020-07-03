@@ -8,7 +8,6 @@ from functools import partial
 import time
 
 import aiohttp
-from tenacity import RetryError
 
 from autoextract.constants import API_ENDPOINT, API_TIMEOUT
 from autoextract.apikey import get_apikey

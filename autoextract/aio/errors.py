@@ -8,6 +8,38 @@ from aiohttp import ClientResponseError
 logger = logging.getLogger(__name__)
 
 
+class DomainOccupied:
+
+    DOMAIN_OCCUPIED_REGEX = re.compile(
+        r".*domain (.+) is occupied, please retry in (.+) seconds.*",
+        re.IGNORECASE
+    )
+
+    def __init__(self, domain: str, retry_seconds: float):
+        self.domain = domain
+        self.retry_seconds = retry_seconds
+
+    @classmethod
+    def from_message(cls, message: str):
+        match = cls.DOMAIN_OCCUPIED_REGEX.match(message)
+        if not match:
+            return
+
+        domain = match.group(1)
+        retry_seconds = match.group(2)
+
+        try:
+            retry_seconds = float(retry_seconds)
+        except ValueError:
+            logger.warning(
+                f"Could not extract retry seconds "
+                f"from Domain Occupied error message: {message}"
+            )
+            retry_seconds = 5 * 60  # 5 minutes
+
+        return cls(domain=domain, retry_seconds=retry_seconds)
+
+
 class RequestError(ClientResponseError):
     """ Exception which is raised when Request-level error is returned.
     In contrast with ClientResponseError, it allows to inspect response
@@ -27,11 +59,6 @@ class QueryError(Exception):
     """ Exception which is raised when a Query-level error is returned.
     https://doc.scrapinghub.com/autoextract.html#query-level
     """
-
-    DOMAIN_OCCUPIED_REGEX = re.compile(
-        r".*domain (.+) is occupied, please retry in (.+) seconds.*",
-        re.IGNORECASE
-    )
 
     RETRIABLE_QUERY_ERROR_MESSAGES = {
         msg.lower().strip()
@@ -56,6 +83,7 @@ class QueryError(Exception):
     def __init__(self, query: dict, message: str):
         self.query = query
         self.message = message
+        self.domain_occupied = DomainOccupied.from_message(message)
 
     def __str__(self):
         return f"QueryError: query={self.query}, message={self.message}"
@@ -68,18 +96,6 @@ class QueryError(Exception):
         return self.message.lower().strip() in self.RETRIABLE_QUERY_ERROR_MESSAGES
 
     @property
-    def domain_occupied(self) -> Optional[str]:
-        match = self.DOMAIN_OCCUPIED_REGEX.match(self.message)
-        return match.group(1) if match else None
-
-    @property
     def retry_seconds(self) -> Optional[float]:
-        match = self.DOMAIN_OCCUPIED_REGEX.match(self.message)
-        try:
-            return float(match.group(2)) if match else None
-        except ValueError:
-            logger.warning(
-                f"Could not extract retry seconds "
-                f"from Domain Occupied error message: {self.message}"
-            )
-            return 5 * 60  # 5 minutes
+        if self.domain_occupied:
+            return self.domain_occupied.retry_seconds

@@ -107,6 +107,8 @@ class autoextract_wait_strategy(wait_base):
             return self.network_wait(retry_state=retry_state)
         elif _is_server_error(exc):
             return self.server_wait(retry_state=retry_state)
+        elif _is_domain_occupied_query_error(exc):
+            return exc.retry_seconds
         elif _is_retriable_query_error(exc):
             return max(
                 exc.retry_seconds or 0,

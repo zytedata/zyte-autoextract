@@ -183,6 +183,8 @@ async def request_raw(query: Query,
     request_processor = RequestProcessor(query, handle_retries)
 
     post = _post_func(session)
+    auth = aiohttp.BasicAuth(get_apikey(api_key))
+    headers = {'User-Agent': user_agent(aiohttp)}
 
     response_stats = []
     start_global = time.perf_counter()
@@ -194,8 +196,8 @@ async def request_raw(query: Query,
         kwargs = dict(
             url=endpoint,
             json=request_processor.pending_queries,
-            auth=aiohttp.BasicAuth(get_apikey(api_key)),
-            headers={'User-Agent': user_agent(aiohttp)},
+            auth=auth,
+            headers=headers,
         )
 
         try:

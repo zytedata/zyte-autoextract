@@ -35,13 +35,6 @@ class Result(List[Dict]):
     response_stats: Optional[List[ResponseStats]] = None
 
 
-class APIConfig:
-
-    def __init__(self, endpoint, api_key):
-        self.endpoint = endpoint
-        self.api_key = api_key
-
-
 class RequestProcessor:
     """Help keeping track of query results and errors between retries.
 
@@ -52,22 +45,18 @@ class RequestProcessor:
     successful queries to avoid repeating them when retrying requests.
     """
 
-    def __init__(self, query: Query, config: APIConfig, handle_retries: bool):
+    def __init__(self, query: Query, handle_retries: bool):
         """Reset temporary data structures and initialize them"""
         self._reset()
-        self._temp_pending_queries = query_as_dict_list(query)
-        self._config = config
+        self.pending_queries = query_as_dict_list(query)
         self._handle_retries = handle_retries
         self._query_successes = list()
 
     def _reset(self):
-        """Clear temporary variables between retries.
-
-        Class attributes prefixed by `_temp` are erased between executions.
-        """
-        self._temp_pending_queries = list()
-        self._temp_query_errors = list()
-        self._temp_query_exceptions = list()
+        """Clear temporary variables between retries"""
+        self.pending_queries = list()
+        self._query_errors = list()
+        self._query_exceptions = list()
 
     def _process_error(self, query_result):
         """Process Query-level error.
@@ -81,10 +70,10 @@ class RequestProcessor:
         if not query_exception.retriable:
             return False
 
-        self._temp_query_exceptions.append(query_exception)
+        self._query_exceptions.append(query_exception)
         user_query = query_result["query"]["userQuery"]
-        self._temp_pending_queries.append(user_query)
-        self._temp_query_errors.append(query_result)
+        self.pending_queries.append(user_query)
+        self._query_errors.append(query_result)
         return True
 
     def _get_exception_with_longest_timeout(self):
@@ -95,17 +84,8 @@ class RequestProcessor:
         have retry seconds defined.
         """
         return max(
-            self._temp_query_exceptions,
+            self._query_exceptions,
             key=lambda exc: exc.retry_seconds or 0
-        )
-
-    def get_post_kwargs(self):
-        """Create keyword-arguments for POST requests"""
-        return dict(
-            url=self._config.endpoint,
-            json=self._temp_pending_queries,
-            auth=aiohttp.BasicAuth(get_apikey(self._config.api_key)),
-            headers={'User-Agent': user_agent(aiohttp)},
         )
 
     def get_latest_results(self):
@@ -114,7 +94,7 @@ class RequestProcessor:
         This method could be used to retrieve results
         when an exception is raised while processing results.
         """
-        return self._query_successes + self._temp_query_errors
+        return self._query_successes + self._query_errors
 
     def process_results(self, query_results):
         """Process query results.
@@ -129,10 +109,10 @@ class RequestProcessor:
 
         Successful requests are saved in `self._query_successes`
         and they are kept between executions
-        while failures are saved in `self._temp_query_errors`.
+        while failures are saved in `self._query_errors`.
 
-        Queries saved in `self._temp_query_errors` are moved to
-        `self._temp_pending_queries` between executions.
+        Queries saved in `self._query_errors` are moved to
+        `self.pending_queries` between executions.
         You can use the first or the n-th result:
 
             - You can get all queries successfully responded in the first try.
@@ -147,7 +127,7 @@ class RequestProcessor:
 
             self._query_successes.append(query_result)
 
-        if self._temp_query_exceptions:
+        if self._query_exceptions:
             raise self._get_exception_with_longest_timeout()
 
         return self.get_latest_results()
@@ -202,12 +182,8 @@ async def request_raw(query: Query,
     if agg_stats is None:
         agg_stats = AggStats()  # dummy stats, to simplify code
 
-    config = APIConfig(endpoint=endpoint, api_key=api_key)
-    request_processor = RequestProcessor(
-        query=query,
-        config=config,
-        handle_retries=handle_retries
-    )
+    # Keep state between executions/retries
+    request_processor = RequestProcessor(query, handle_retries)
 
     post = _post_func(session)
 
@@ -217,8 +193,16 @@ async def request_raw(query: Query,
     async def request():
         stats = ResponseStats.create(start_global)
         agg_stats.n_attempts += 1
+
+        kwargs = dict(
+            url=endpoint,
+            json=request_processor.pending_queries,
+            auth=aiohttp.BasicAuth(get_apikey(api_key)),
+            headers={'User-Agent': user_agent(aiohttp)},
+        )
+
         try:
-            async with post(**request_processor.get_post_kwargs()) as resp:
+            async with post(**kwargs) as resp:
                 stats.status = resp.status
                 stats.record_connected(agg_stats)
                 if resp.status >= 400:

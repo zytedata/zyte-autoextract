@@ -6,10 +6,6 @@ TODO: add sync support; only autoextract.aio is supported at the moment.
 """
 import asyncio
 import logging
-import re
-
-from datetime import timedelta
-from typing import Optional
 
 from aiohttp import client_exceptions
 from tenacity import (

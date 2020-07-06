@@ -183,7 +183,7 @@ async def request_raw(query: Query,
         stats = ResponseStats.create(start_global)
         agg_stats.n_attempts += 1
 
-        kwargs = dict(
+        post_kwargs = dict(
             url=endpoint,
             json=request_processor.pending_queries,
             auth=auth,
@@ -191,7 +191,7 @@ async def request_raw(query: Query,
         )
 
         try:
-            async with post(**kwargs) as resp:
+            async with post(**post_kwargs) as resp:
                 stats.status = resp.status
                 stats.record_connected(agg_stats)
                 if resp.status >= 400:

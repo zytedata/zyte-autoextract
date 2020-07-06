@@ -106,6 +106,8 @@ class QueryError(Exception):
         if self.domain_occupied:
             return self.domain_occupied.retry_seconds
 
+        return 0.0
+
 
 class QueryRetryError(RetryError):
     """A Tenacity's RetryError caused by a QueryError"""

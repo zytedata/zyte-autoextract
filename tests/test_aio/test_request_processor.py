@@ -200,3 +200,73 @@ def test_request_processor_with_retries():
     # Our pending queries list should be empty
     # because there's no additional query to be retried
     assert request_processor.pending_queries == []
+
+
+def test_request_processor_exception_priority():
+    # Given an initial query with two items
+    initial_query = [
+        {
+            "url": "https://example.org/first",
+            "pageType": "article",
+        },
+        {
+            "url": "https://example.org/second",
+            "pageType": "article",
+        },
+    ]
+
+    # Initialize our request processor with this query
+    request_processor = RequestProcessor(
+        query=initial_query,
+        handle_retries=True
+    )
+
+    # Since we haven't processed any response yet,
+    # our request processor should have:
+    #
+    # Empty results
+    assert request_processor.get_latest_results() == []
+    # Pending queries list equal to our initial query
+    assert request_processor.pending_queries == initial_query
+
+    # Given our first response with two errors
+    first_response = [
+        {
+            "query": {
+                "id": "1",
+                "domain": "example.org",
+                "userQuery": {
+                    "url": "https://example.org/first",
+                    "pageType": "article"
+                }
+            },
+            "error": "Domain example.com is occupied, please retry in 23.5 seconds",
+        },
+        {
+            "query": {
+                "id": "2",
+                "domain": "example.org",
+                "userQuery": {
+                    "url": "https://example.org/second",
+                    "pageType": "article"
+                }
+            },
+            "error": "Proxy error: internal_error",
+        },
+    ]
+
+    # If we try to process our response,
+    # a QueryError with Domain Occupied message should be raised
+    with pytest.raises(QueryError) as exc_info:
+        request_processor.process_results(first_response)
+
+    assert bool(exc_info.value.domain_occupied) is True
+    assert exc_info.value.retry_seconds == 23.5
+
+    # The same thing should happen if the order of the queries is inverted
+    first_response.reverse()
+    with pytest.raises(QueryError) as exc_info:
+        request_processor.process_results(first_response)
+
+    assert bool(exc_info.value.domain_occupied) is True
+    assert exc_info.value.retry_seconds == 23.5

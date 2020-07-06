@@ -116,7 +116,7 @@ class RequestProcessor:
             # and get the one with the longest timeout value
             exception_with_longest_timeout = max(
                 self._retriable_query_exceptions,
-                key=lambda exc: exc.retry_seconds or 0
+                key=lambda exc: exc.retry_seconds
             )
             raise exception_with_longest_timeout
 

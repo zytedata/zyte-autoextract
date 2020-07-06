@@ -111,7 +111,7 @@ class autoextract_wait_strategy(wait_base):
             return exc.retry_seconds
         elif _is_retriable_query_error(exc):
             return max(
-                exc.retry_seconds or 0,
+                exc.retry_seconds,
                 self.retriable_wait(retry_state=retry_state)
             )
         else:

@@ -53,7 +53,7 @@ class RequestError(ClientResponseError):
         super().__init__(*args, **kwargs)
 
     def __str__(self):
-        return f"ApiError: {self.status}, message={self.message}, " \
+        return f"RequestError: {self.status}, message={self.message}, " \
                f"headers={self.headers}, body={self.response_content}"
 
 

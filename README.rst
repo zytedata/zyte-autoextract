@@ -194,7 +194,7 @@ connections::
                     for res in batch_result:
                         # do something with a result, e.g.
                         print(json.dumps(res))
-                except ApiError as e:
+                except RequestError as e:
                     print(e, file=sys.stderr)
                     raise
 

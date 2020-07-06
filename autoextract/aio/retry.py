@@ -44,7 +44,7 @@ _NETWORK_ERRORS = (
 
 def _is_network_error(exc: Exception) -> bool:
     if isinstance(exc, RequestError):
-        # ApiError is ClientResponseError, which is in the
+        # RequestError is ClientResponseError, which is in the
         # _NETWORK_ERRORS list, but it should be handled
         # separately.
         return False

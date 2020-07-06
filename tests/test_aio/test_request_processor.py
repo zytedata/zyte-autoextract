@@ -202,7 +202,13 @@ def test_request_processor_with_retries():
     assert request_processor.pending_queries == []
 
 
-def test_request_processor_exception_priority():
+@pytest.mark.parametrize("message, retry_seconds, domain_occupied", [
+    ("Domain example.com is occupied, please retry in 23.5 seconds", 23.5, True,),
+    ("Domain example.com is occupied, please retry in 14 seconds", 14.0, True,),
+    ("Proxy error: timeout", 0.0, False,),
+])
+def test_request_processor_exception_priority(
+        message, retry_seconds, domain_occupied):
     # Given an initial query with two items
     initial_query = [
         {
@@ -240,7 +246,7 @@ def test_request_processor_exception_priority():
                     "pageType": "article"
                 }
             },
-            "error": "Domain example.com is occupied, please retry in 23.5 seconds",
+            "error": message,
         },
         {
             "query": {
@@ -255,18 +261,17 @@ def test_request_processor_exception_priority():
         },
     ]
 
-    # If we try to process our response,
-    # a QueryError with Domain Occupied message should be raised
+    # If we try to process our response, a QueryError should be raised
     with pytest.raises(QueryError) as exc_info:
         request_processor.process_results(first_response)
 
-    assert bool(exc_info.value.domain_occupied) is True
-    assert exc_info.value.retry_seconds == 23.5
+    assert bool(exc_info.value.domain_occupied) is domain_occupied
+    assert exc_info.value.retry_seconds == retry_seconds
 
     # The same thing should happen if the order of the queries is inverted
     first_response.reverse()
     with pytest.raises(QueryError) as exc_info:
         request_processor.process_results(first_response)
 
-    assert bool(exc_info.value.domain_occupied) is True
-    assert exc_info.value.retry_seconds == 23.5
+    assert bool(exc_info.value.domain_occupied) is domain_occupied
+    assert exc_info.value.retry_seconds == retry_seconds

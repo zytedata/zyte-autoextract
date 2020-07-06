@@ -57,8 +57,13 @@ class RequestProcessor:
         self._query_errors: List[Dict] = list()
         self._retriable_query_exceptions: List[Dict] = list()
 
-    def _process_error(self, query_result, query_exception):
-        """Process Query-level error"""
+    def _enqueue_error(self, query_result, query_exception):
+        """Enqueue Query-level error.
+
+        Enqueued errors could be:
+            - used in combination with successes with `get_latest_results`
+            - retried using `pending_requests`
+        """
         self._query_errors.append(query_result)
         self._retriable_query_exceptions.append(query_exception)
 
@@ -101,7 +106,7 @@ class RequestProcessor:
             if self._handle_retries and "error" in query_result:
                 query_exception = QueryError.from_query_result(query_result)
                 if query_exception.retriable:
-                    self._process_error(query_result, query_exception)
+                    self._enqueue_error(query_result, query_exception)
                     continue
 
             self._query_successes.append(query_result)

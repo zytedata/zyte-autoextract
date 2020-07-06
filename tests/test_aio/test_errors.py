@@ -78,4 +78,4 @@ def test_invalid_domain_occupied_query_error(message):
     query_error = get_query_error(message)
     exc = QueryError.from_query_result(query_error)
     assert exc.domain_occupied is None
-    assert exc.retry_seconds is None
+    assert exc.retry_seconds == 0.0

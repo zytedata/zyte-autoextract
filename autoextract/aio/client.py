@@ -128,7 +128,7 @@ async def request_raw(query: Query,
                       endpoint: str = API_ENDPOINT,
                       *,
                       handle_retries: bool = True,
-                      handle_query_errors: bool = True,
+                      skip_query_errors: bool = False,
                       session: Optional[aiohttp.ClientSession] = None,
                       agg_stats: AggStats = None,
                       ) -> Result:
@@ -162,7 +162,7 @@ async def request_raw(query: Query,
     Throttling errors are retried indefinitely when handle_retries is True.
 
     When ``handle_retries=True``, we'll automatically retry Query-level errors.
-    Use ``handle_query_errors=False`` if you want to to disable this behavior.
+    Use ``skip_query_errors=True`` if you want to to disable this behavior.
 
     ``agg_stats`` argument allows to keep track of various stats; pass an
     ``AggStats`` instance, and it'll be updated.
@@ -176,7 +176,7 @@ async def request_raw(query: Query,
     # Keep state between executions/retries
     request_processor = RequestProcessor(
         query=query,
-        handle_retries=handle_retries and handle_query_errors,
+        handle_retries=handle_retries and not skip_query_errors,
     )
 
     post = _post_func(session)
@@ -259,6 +259,8 @@ def request_parallel_as_completed(query: Query,
                                   batch_size=1,
                                   n_conn=1,
                                   agg_stats: AggStats = None,
+                                  handle_retries=True,
+                                  skip_query_errors=False,
                                   ) -> Iterator[asyncio.Future]:
     """ Send multiple requests to AutoExtract API in parallel.
     Return an `asyncio.as_completed` iterator.
@@ -293,7 +295,10 @@ def request_parallel_as_completed(query: Query,
                                      api_key=api_key,
                                      endpoint=endpoint,
                                      session=session,
-                                     agg_stats=agg_stats)
+                                     agg_stats=agg_stats,
+                                     handle_retries=handle_retries,
+                                     skip_query_errors=skip_query_errors,
+                                     )
 
     batches = chunks(query, batch_size)
     return asyncio.as_completed([_request(batch) for batch in batches])

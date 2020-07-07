@@ -24,7 +24,7 @@ logger = logging.getLogger('autoextract')
 
 
 async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
-              api_key=None):
+              api_key=None, handle_retries=True, skip_query_errors=False):
     agg_stats = AggStats()
     async with create_session() as session:
         result_iter = request_parallel_as_completed(
@@ -34,6 +34,8 @@ async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
             session=session,
             api_key=api_key,
             agg_stats=agg_stats,
+            handle_retries=handle_retries,
+            skip_query_errors=skip_query_errors
         )
         pbar = tqdm.tqdm(smoothing=0, leave=True, total=len(query), miniters=1,
                          unit="url")
@@ -116,6 +118,12 @@ if __name__ == '__main__':
                    choices=["DEBUG", "INFO", "WARNING", "ERROR"],
                    help="log level")
     p.add_argument("--shuffle", help="Shuffle input URLs", action="store_true")
+    p.add_argument("--disable-retries", action="store_true",
+                   help="Disable network, Request-level, and Query-level "
+                        "errors retrying.")
+    p.add_argument("--skip-query-errors", action="store_true",
+                   help="Disable Query-level errors retrying. "
+                        "It has no effect when retries are disabled.")
     args = p.parse_args()
     logging.basicConfig(level=getattr(logging, args.loglevel))
 
@@ -133,6 +141,8 @@ if __name__ == '__main__':
                n_conn=args.n_conn,
                batch_size=args.batch_size,
                stop_on_errors=False,
-               api_key=args.api_key)
+               api_key=args.api_key,
+               handle_retries=not args.disable_retries,
+               skip_query_errors=args.skip_query_errors)
     loop.run_until_complete(coro)
     loop.close()

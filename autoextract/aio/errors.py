@@ -76,9 +76,6 @@ class QueryError(Exception):
             "Proxy error: ssl_tunnel_error",
             "Proxy error: msgtimeout",
             "Proxy error: econnrefused",
-            # Retry errors for AutoExtract API dev server
-            "Error making splash request: ServerDisconnectedError",
-            "Error making splash request: ClientOSError: [Errno 32] Broken pipe",
         ]
     }
 

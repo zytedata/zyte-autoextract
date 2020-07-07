@@ -31,9 +31,6 @@ def get_query_error(message):
         ("Proxy error: ssl_tunnel_error", True),
         ("Proxy error: msgtimeout", True),
         ("Proxy error: econnrefused", True),
-        # Retry errors for AutoExtract API dev server
-        ("Error making splash request: ServerDisconnectedError", True),
-        ("Error making splash request: ClientOSError: [Errno 32] Broken pipe", True),
 ))
 def test_query_error(message, retriable):
     query_error = get_query_error(message)

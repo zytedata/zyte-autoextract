@@ -128,6 +128,7 @@ async def request_raw(query: Query,
                       endpoint: str = API_ENDPOINT,
                       *,
                       handle_retries: bool = True,
+                      handle_query_errors: bool = True,
                       session: Optional[aiohttp.ClientSession] = None,
                       agg_stats: AggStats = None,
                       ) -> Result:
@@ -160,6 +161,9 @@ async def request_raw(query: Query,
 
     Throttling errors are retried indefinitely when handle_retries is True.
 
+    When ``handle_retries=True``, we'll automatically retry Query-level errors.
+    Use ``handle_query_errors=False`` if you want to to disable this behavior.
+
     ``agg_stats`` argument allows to keep track of various stats; pass an
     ``AggStats`` instance, and it'll be updated.
 
@@ -170,7 +174,10 @@ async def request_raw(query: Query,
         agg_stats = AggStats()  # dummy stats, to simplify code
 
     # Keep state between executions/retries
-    request_processor = RequestProcessor(query, handle_retries)
+    request_processor = RequestProcessor(
+        query=query,
+        handle_retries=handle_retries and handle_query_errors,
+    )
 
     post = _post_func(session)
     auth = aiohttp.BasicAuth(get_apikey(api_key))

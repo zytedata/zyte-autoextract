@@ -20,7 +20,7 @@ def test_request_processor_without_retries():
     # Initialize our request processor with this query
     request_processor = RequestProcessor(
         query=initial_query,
-        handle_retries=False
+        handle_query_errors=False
     )
 
     # Since we haven't processed any response yet,
@@ -87,7 +87,7 @@ def test_request_processor_with_not_retriable_error():
     # Initialize our request processor with this query
     request_processor = RequestProcessor(
         query=initial_query,
-        handle_retries=True
+        handle_query_errors=True
     )
 
     # Since we haven't processed any response yet,
@@ -155,7 +155,7 @@ def test_request_processor_with_retries():
     # Initialize our request processor with this query
     request_processor = RequestProcessor(
         query=initial_query,
-        handle_retries=True
+        handle_query_errors=True
     )
 
     # Since we haven't processed any response yet,
@@ -292,7 +292,7 @@ def test_request_processor_exception_priority(
     # Initialize our request processor with this query
     request_processor = RequestProcessor(
         query=initial_query,
-        handle_retries=True
+        handle_query_errors=True
     )
 
     # Since we haven't processed any response yet,

@@ -44,11 +44,11 @@ class RequestProcessor:
     successful queries to avoid repeating them when retrying requests.
     """
 
-    def __init__(self, query: Query, handle_retries: bool):
+    def __init__(self, query: Query, handle_query_errors: bool):
         """Reset temporary data structures and initialize them"""
         self._reset()
         self.pending_queries = query_as_dict_list(query)
-        self._handle_retries = handle_retries
+        self._handle_query_errors = handle_query_errors
         self._query_successes: List[Dict] = list()
 
     def _reset(self):
@@ -103,7 +103,7 @@ class RequestProcessor:
         """
         self._reset()
         for query_result in query_results:
-            if self._handle_retries and "error" in query_result:
+            if self._handle_query_errors and "error" in query_result:
                 query_exception = QueryError.from_query_result(query_result)
                 if query_exception.retriable:
                     self._enqueue_error(query_result, query_exception)
@@ -176,7 +176,7 @@ async def request_raw(query: Query,
     # Keep state between executions/retries
     request_processor = RequestProcessor(
         query=query,
-        handle_retries=handle_retries and not skip_query_errors,
+        handle_query_errors=handle_retries and not skip_query_errors,
     )
 
     post = _post_func(session)

@@ -24,7 +24,7 @@ logger = logging.getLogger('autoextract')
 
 
 async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
-              api_key=None, handle_retries=True, skip_query_errors=False):
+              api_key=None, handle_retries=True, max_query_error_retries=0):
     agg_stats = AggStats()
     async with create_session() as session:
         result_iter = request_parallel_as_completed(
@@ -35,7 +35,7 @@ async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
             api_key=api_key,
             agg_stats=agg_stats,
             handle_retries=handle_retries,
-            skip_query_errors=skip_query_errors
+            max_query_error_retries=max_query_error_retries
         )
         pbar = tqdm.tqdm(smoothing=0, leave=True, total=len(query), miniters=1,
                          unit="url")
@@ -121,8 +121,8 @@ if __name__ == '__main__':
     p.add_argument("--disable-retries", action="store_true",
                    help="Disable network, Request-level, and Query-level "
                         "errors retrying.")
-    p.add_argument("--skip-query-errors", action="store_true",
-                   help="Disable Query-level errors retrying. "
+    p.add_argument("--max-query-error-retries", type=int, default=0,
+                   help="Max number of Query-level error retries. "
                         "It has no effect when retries are disabled.")
     args = p.parse_args()
     logging.basicConfig(level=getattr(logging, args.loglevel))
@@ -135,6 +135,13 @@ if __name__ == '__main__':
     logger.info(f"Running AutoExtract (connections: {args.n_conn}, "
                 f"batch size: {args.batch_size}, page type: {args.page_type})")
 
+    if args.max_query_error_retries and args.disable_retries:
+        logger.warning(
+            "You're specifying a max number of Query-level error retries, "
+            "but you've disabled retries. Consider removing the "
+            "--disable-retries argument."
+        )
+
     loop = asyncio.get_event_loop()
     coro = run(query,
                out=args.output,
@@ -143,6 +150,6 @@ if __name__ == '__main__':
                stop_on_errors=False,
                api_key=args.api_key,
                handle_retries=not args.disable_retries,
-               skip_query_errors=args.skip_query_errors)
+               max_query_error_retries=args.max_query_error_retries)
     loop.run_until_complete(coro)
     loop.close()

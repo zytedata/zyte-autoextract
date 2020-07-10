@@ -79,17 +79,20 @@ class QueryError(Exception):
         ]
     }
 
-    def __init__(self, query: dict, message: str):
+    def __init__(self, query: dict, message: str, max_retries: int = 0):
         self.query = query
         self.message = message
+        self.max_retries = max_retries
         self.domain_occupied = DomainOccupied.from_message(message)
 
     def __str__(self):
-        return f"QueryError: query={self.query}, message={self.message}"
+        return f"QueryError: query={self.query}, message={self.message}, " \
+               f"max_retries={self.max_retries}"
 
     @classmethod
-    def from_query_result(cls, query_result: dict):
-        return cls(query=query_result["query"], message=query_result["error"])
+    def from_query_result(cls, query_result: dict, max_retries: int = 0):
+        return cls(query=query_result["query"], message=query_result["error"],
+                   max_retries=max_retries)
 
     @property
     def retriable(self) -> bool:

@@ -3,9 +3,10 @@
 aiohttp Scrapinghub AutoExtract API client.
 """
 import asyncio
+import logging
+import time
 from typing import Optional, Dict, List, Iterator
 from functools import partial
-import time
 
 import aiohttp
 
@@ -16,6 +17,8 @@ from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
 from .retry import autoextract_retry, QueryRetryError
 from .errors import RequestError, QueryError
+
+logger = logging.getLogger('autoextract')
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -44,11 +47,11 @@ class RequestProcessor:
     successful queries to avoid repeating them when retrying requests.
     """
 
-    def __init__(self, query: Query, handle_query_errors: bool):
+    def __init__(self, query: Query, max_retries: int = 0):
         """Reset temporary data structures and initialize them"""
         self._reset()
         self.pending_queries = query_as_dict_list(query)
-        self._handle_query_errors = handle_query_errors
+        self._max_retries = max_retries
         self._query_successes: List[Dict] = list()
 
     def _reset(self):
@@ -103,8 +106,9 @@ class RequestProcessor:
         """
         self._reset()
         for query_result in query_results:
-            if self._handle_query_errors and "error" in query_result:
-                query_exception = QueryError.from_query_result(query_result)
+            if self._max_retries and "error" in query_result:
+                query_exception = QueryError.from_query_result(
+                    query_result, self._max_retries)
                 if query_exception.retriable:
                     self._enqueue_error(query_result, query_exception)
                     continue
@@ -128,7 +132,7 @@ async def request_raw(query: Query,
                       endpoint: str = API_ENDPOINT,
                       *,
                       handle_retries: bool = True,
-                      skip_query_errors: bool = False,
+                      max_query_error_retries: int = 0,
                       session: Optional[aiohttp.ClientSession] = None,
                       agg_stats: AggStats = None,
                       ) -> Result:
@@ -161,8 +165,8 @@ async def request_raw(query: Query,
 
     Throttling errors are retried indefinitely when handle_retries is True.
 
-    When ``handle_retries=True``, we'll automatically retry Query-level errors.
-    Use ``skip_query_errors=True`` if you want to to disable this behavior.
+    When ``handle_retries=True``, we could also retry Query-level errors.
+    Use ``max_query_error_retries > 0`` if you want to to enable this behavior.
 
     ``agg_stats`` argument allows to keep track of various stats; pass an
     ``AggStats`` instance, and it'll be updated.
@@ -173,10 +177,17 @@ async def request_raw(query: Query,
     if agg_stats is None:
         agg_stats = AggStats()  # dummy stats, to simplify code
 
+    if max_query_error_retries and not handle_retries:
+        logger.warning(
+            "You've specified a max number of Query-level error retries, "
+            "but retries are disabled. Consider passing the handle_retries "
+            "argument as True."
+        )
+
     # Keep state between executions/retries
     request_processor = RequestProcessor(
         query=query,
-        handle_query_errors=handle_retries and not skip_query_errors,
+        max_retries=max_query_error_retries if handle_retries else 0,
     )
 
     post = _post_func(session)
@@ -260,7 +271,7 @@ def request_parallel_as_completed(query: Query,
                                   n_conn=1,
                                   agg_stats: AggStats = None,
                                   handle_retries=True,
-                                  skip_query_errors=False,
+                                  max_query_error_retries=False,
                                   ) -> Iterator[asyncio.Future]:
     """ Send multiple requests to AutoExtract API in parallel.
     Return an `asyncio.as_completed` iterator.
@@ -297,7 +308,7 @@ def request_parallel_as_completed(query: Query,
                                      session=session,
                                      agg_stats=agg_stats,
                                      handle_retries=handle_retries,
-                                     skip_query_errors=skip_query_errors,
+                                     max_query_error_retries=max_query_error_retries,
                                      )
 
     batches = chunks(query, batch_size)

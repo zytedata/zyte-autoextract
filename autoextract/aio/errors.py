@@ -110,5 +110,7 @@ class QueryError(Exception):
 
 
 class QueryRetryError(RetryError):
-    """A Tenacity's RetryError caused by a QueryError"""
+    """This exception is raised when Tenacity reaches the max retry count or
+    timeouts when retrying Query-level errors (see :class:``.QueryError``).
+    """
     pass

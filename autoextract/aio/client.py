@@ -241,13 +241,23 @@ async def request_raw(query: Query,
             response_stats.append(stats)
 
     if handle_retries:
+        # If handle_retries=True, the request method could raise
+        # RetryError and QueryRetryError exceptions.
+        #
+        # These exceptions are raised when Tenacity is not able to
+        # successfully retry failing requests.
+        #
+        # In addition to handle_retries=True, QueryRetryError also depends on
+        # max_query_error_retries being a non-nullable positive integer.
         request = autoextract_retry(request)
 
     try:
+        # Try to make a batch request
         result = await request()
     except QueryRetryError:
-        # Get latest results combining error and successes
-        # in order to return whatever is possible
+        # If Tenacity fails to retry a QueryError because the max number of
+        # retries or a timeout was reached, get latest results combining
+        # error and successes and consider it as the final result.
         result = request_processor.get_latest_results()
     except Exception:
         agg_stats.n_fatal_errors += 1

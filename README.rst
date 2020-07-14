@@ -133,6 +133,22 @@ input queries before sending them to the API:
 Run ``python -m autoextract --help`` to get description of all supported
 options.
 
+Retries
+~~~~~~~
+
+By default, the command-line interface will automatically retry Network and
+Request-level errors. You could also enable Query-level errors retrying by
+specifying the ``--max-query-error-retries`` argument.
+
+.. code-block::
+
+    python -m autoextract urls.txt --page-type articles --max-query-error-retries 3 --output res.jl
+
+Queries with success will be buffered while failing queries will be retried
+until the max number of retries or a timeout is reached. If it's not possible
+to successfully retrieve all queries, we'll return the last available results
+including both successes and failures.
+
 Synchronous API
 ---------------
 

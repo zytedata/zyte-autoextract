@@ -115,9 +115,10 @@ class autoextract_wait_strategy(wait_base):
 class autoextract_stop_strategy(stop_base):
     def __init__(self):
         self.stop_on_throttling_error = stop_never
-        self.stop_on_network_error = stop_after_delay(15 * 60)
-        self.stop_on_server_error = self.stop_on_network_error
-        self.stop_on_retriable_query_error = self.stop_on_network_error
+        self.stop_after_15_minutes = stop_after_delay(15 * 60)
+        self.stop_on_network_error = self.stop_after_15_minutes
+        self.stop_on_server_error = self.stop_after_15_minutes
+        self.stop_on_retriable_query_error = self.stop_after_15_minutes
 
     def __call__(self, retry_state: RetryCallState) -> bool:
         exc = retry_state.outcome.exception()

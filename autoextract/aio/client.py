@@ -271,7 +271,7 @@ def request_parallel_as_completed(query: Query,
                                   n_conn=1,
                                   agg_stats: AggStats = None,
                                   handle_retries=True,
-                                  max_query_error_retries=False,
+                                  max_query_error_retries=0,
                                   ) -> Iterator[asyncio.Future]:
     """ Send multiple requests to AutoExtract API in parallel.
     Return an `asyncio.as_completed` iterator.

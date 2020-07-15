@@ -159,9 +159,13 @@ response is a 404 Not Found.
 Retries
 ~~~~~~~
 
-By default, the command-line interface will automatically retry Network and
-Request-level errors. You could also enable Query-level errors retrying by
-specifying the ``--max-query-error-retries`` argument.
+By default, we will automatically retry Network and Request-level errors.
+You could also enable Query-level errors retries
+by specifying the ``--max-query-error-retries`` argument.
+
+Enable Query-level retries to increase the success rate
+at the cost of more requests being performed
+if you are interested in a higher success rate.
 
 .. code-block::
 

@@ -102,7 +102,7 @@ class QueryError(Exception):
         return self.message.lower().strip() in self.RETRIABLE_MESSAGES
 
     @property
-    def retry_seconds(self) -> Optional[float]:
+    def retry_seconds(self) -> float:
         if self.domain_occupied:
             return self.domain_occupied.retry_seconds
 

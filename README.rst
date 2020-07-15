@@ -133,6 +133,29 @@ input queries before sending them to the API:
 Run ``python -m autoextract --help`` to get description of all supported
 options.
 
+Errors
+~~~~~~
+
+The following errors could happen while making requests:
+
+- Network errors
+- `Request-level errors`_
+    - Authentication failure
+    - Malformed request
+    - Too many queries in request
+    - Request payload size is too large
+- `Query-level errors`_
+    - Downloader errors
+    - Proxy errors
+    - ...
+
+Some errors could be retried while others don't. For example, you could retry
+a request if there's a proxy timeout but you shouldn't retry a request if the
+response is a 404 Not Found.
+
+.. _Request-level errors: https://doc.scrapinghub.com/autoextract.html#request-level
+.. _Query-level errors: https://doc.scrapinghub.com/autoextract.html#query-level
+
 Retries
 ~~~~~~~
 

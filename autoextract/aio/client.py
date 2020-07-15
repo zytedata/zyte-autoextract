@@ -52,12 +52,12 @@ class RequestProcessor:
         self._reset()
         self.pending_queries = query_as_dict_list(query)
         self._max_retries = max_retries
-        self._query_successes: List[Dict] = list()
+        self._complete_queries: List[Dict] = list()
 
     def _reset(self):
         """Clear temporary variables between retries"""
         self.pending_queries: List[Dict] = list()
-        self._query_errors: List[Dict] = list()
+        self._retriable_queries: List[Dict] = list()
         self._retriable_query_exceptions: List[Dict] = list()
 
     def _enqueue_error(self, query_result, query_exception):
@@ -67,7 +67,7 @@ class RequestProcessor:
             - used in combination with successes with `get_latest_results`
             - retried using `pending_requests`
         """
-        self._query_errors.append(query_result)
+        self._retriable_queries.append(query_result)
         self._retriable_query_exceptions.append(query_exception)
 
         user_query = query_result["query"]["userQuery"]
@@ -79,7 +79,7 @@ class RequestProcessor:
         This method could be used to retrieve results
         when an exception is raised while processing results.
         """
-        return self._query_successes + self._query_errors
+        return self._complete_queries + self._retriable_queries
 
     def process_results(self, query_results):
         """Process query results.
@@ -92,11 +92,12 @@ class RequestProcessor:
         If multiple `QueryError` exceptions are parsed,
         the one with the longest timeout is raised.
 
-        Successful requests are saved in `self._query_successes`
+        Successful requests are saved in `self._complete_queries`
+        among with errors that cannot be retried,
         and they are kept between executions
-        while failures are saved in `self._query_errors`.
+        while retriable failures are saved in `self._retriable_queries`.
 
-        Queries saved in `self._query_errors` are moved to
+        Queries saved in `self._retriable_queries` are moved to
         `self.pending_queries` between executions.
         You can use the first or the n-th result:
 
@@ -113,7 +114,7 @@ class RequestProcessor:
                     self._enqueue_error(query_result, query_exception)
                     continue
 
-            self._query_successes.append(query_result)
+            self._complete_queries.append(query_result)
 
         if self._retriable_query_exceptions:
             # Prioritize exceptions that have retry seconds defined

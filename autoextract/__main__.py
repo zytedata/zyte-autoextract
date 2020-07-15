@@ -118,7 +118,11 @@ if __name__ == '__main__':
                    help="log level")
     p.add_argument("--shuffle", help="Shuffle input URLs", action="store_true")
     p.add_argument("--max-query-error-retries", type=int, default=0,
-                   help="Max number of Query-level error retries.")
+                   help="Max number of Query-level error retries. "
+                        "Enable Query-level error retries to increase the "
+                        "success rate at the cost of more requests being "
+                        "performed. It is recommended if you are interested "
+                        "in a higher success rate.")
     args = p.parse_args()
     logging.basicConfig(level=getattr(logging, args.loglevel))
 

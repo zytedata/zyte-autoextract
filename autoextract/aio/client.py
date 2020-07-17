@@ -18,7 +18,7 @@ from autoextract.stats import ResponseStats, AggStats
 from .retry import autoextract_retry, QueryRetryError
 from .errors import RequestError, QueryError
 
-logger = logging.getLogger('autoextract')
+logger = logging.getLogger(__name__)
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,

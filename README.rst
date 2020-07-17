@@ -149,9 +149,17 @@ The following errors could happen while making requests:
     - Proxy errors
     - ...
 
-Some errors could be retried while others don't. For example, you could retry
-a request if there's a proxy timeout but you shouldn't retry a request if the
-response is a 404 Not Found.
+Some errors could be retried while others don't.
+
+For example,
+you could retry a query with a Proxy Timeout error
+because this is a temporary error
+and there are chances that this response will be different
+within the next retries.
+
+On the other hand,
+it makes no sense to retry queries that return a 404 Not Found error
+because the response is not supposed to change if retried.
 
 .. _Request-level errors: https://doc.scrapinghub.com/autoextract.html#request-level
 .. _Query-level errors: https://doc.scrapinghub.com/autoextract.html#query-level
@@ -171,10 +179,15 @@ if you are interested in a higher success rate.
 
     python -m autoextract urls.txt --page-type articles --max-query-error-retries 3 --output res.jl
 
-Queries with success will be buffered while failing queries will be retried
-until the max number of retries or a timeout is reached. If it's not possible
-to successfully retrieve all queries, we'll return the last available results
-including both successes and failures.
+Failing queries are retried
+until the max number of retries or a timeout is reached.
+If it's still not possible to fetch all queries without errors,
+the last available result is written to the output
+including both queries with success and the ones with errors.
+
+When batches are used,
+successful responses may be buffered in memory
+until all queries in a batch are resolved.
 
 Synchronous API
 ---------------

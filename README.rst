@@ -185,10 +185,6 @@ If it's still not possible to fetch all queries without errors,
 the last available result is written to the output
 including both queries with success and the ones with errors.
 
-When batches are used,
-successful responses may be buffered in memory
-until all queries in a batch are resolved.
-
 Synchronous API
 ---------------
 

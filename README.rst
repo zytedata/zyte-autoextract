@@ -149,10 +149,10 @@ The following errors could happen while making requests:
     - Proxy errors
     - ...
 
-Some errors could be retried while others don't.
+Some errors can be retried while others can't.
 
 For example,
-you could retry a query with a Proxy Timeout error
+you can retry a query with a Proxy Timeout error
 because this is a temporary error
 and there are chances that this response will be different
 within the next retries.

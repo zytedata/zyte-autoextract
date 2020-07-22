@@ -230,7 +230,7 @@ async def request_raw(query: Query,
                         headers=resp.headers,
                         response_content=content
                     )
-                # good response
+
                 response = await resp.json()
                 stats.record_read(agg_stats)
                 return request_processor.process_results(response)

@@ -3,8 +3,8 @@
 aiohttp Scrapinghub AutoExtract API client.
 """
 import asyncio
-import logging
 import time
+import warnings
 from typing import Optional, Dict, List, Iterator
 from functools import partial
 
@@ -17,8 +17,6 @@ from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
 from .retry import autoextract_retry, QueryRetryError
 from .errors import RequestError, QueryError
-
-logger = logging.getLogger(__name__)
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -179,7 +177,7 @@ async def request_raw(query: Query,
         agg_stats = AggStats()  # dummy stats, to simplify code
 
     if max_query_error_retries and not handle_retries:
-        logger.warning(
+        warnings.warn(
             "You've specified a max number of Query-level error retries, "
             "but retries are disabled. Consider passing the handle_retries "
             "argument as True."

@@ -133,6 +133,58 @@ input queries before sending them to the API:
 Run ``python -m autoextract --help`` to get description of all supported
 options.
 
+Errors
+~~~~~~
+
+The following errors could happen while making requests:
+
+- Network errors
+- `Request-level errors`_
+    - Authentication failure
+    - Malformed request
+    - Too many queries in request
+    - Request payload size is too large
+- `Query-level errors`_
+    - Downloader errors
+    - Proxy errors
+    - ...
+
+Some errors can be retried while others can't.
+
+For example,
+you can retry a query with a Proxy Timeout error
+because this is a temporary error
+and there are chances that this response will be different
+within the next retries.
+
+On the other hand,
+it makes no sense to retry queries that return a 404 Not Found error
+because the response is not supposed to change if retried.
+
+.. _Request-level errors: https://doc.scrapinghub.com/autoextract.html#request-level
+.. _Query-level errors: https://doc.scrapinghub.com/autoextract.html#query-level
+
+Retries
+~~~~~~~
+
+By default, we will automatically retry Network and Request-level errors.
+You could also enable Query-level errors retries
+by specifying the ``--max-query-error-retries`` argument.
+
+Enable Query-level retries to increase the success rate
+at the cost of more requests being performed
+if you are interested in a higher success rate.
+
+.. code-block::
+
+    python -m autoextract urls.txt --page-type articles --max-query-error-retries 3 --output res.jl
+
+Failing queries are retried
+until the max number of retries or a timeout is reached.
+If it's still not possible to fetch all queries without errors,
+the last available result is written to the output
+including both queries with success and the ones with errors.
+
 Synchronous API
 ---------------
 
@@ -194,7 +246,7 @@ connections::
                     for res in batch_result:
                         # do something with a result, e.g.
                         print(json.dumps(res))
-                except ApiError as e:
+                except RequestError as e:
                     print(e, file=sys.stderr)
                     raise
 

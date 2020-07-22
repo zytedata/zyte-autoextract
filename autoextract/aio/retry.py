@@ -13,9 +13,11 @@ from tenacity import (
     wait_fixed,
     wait_random_exponential,
     wait_random,
+    stop_after_attempt,
     stop_after_delay,
     retry_if_exception,
     RetryCallState,
+    RetryError,
     retry,
     before_sleep_log,
     after_log,
@@ -23,7 +25,7 @@ from tenacity import (
 from tenacity.stop import stop_base, stop_never
 from tenacity.wait import wait_base
 
-from .errors import ApiError
+from .errors import RequestError, QueryError, QueryRetryError
 
 
 logger = logging.getLogger(__name__)
@@ -42,8 +44,8 @@ _NETWORK_ERRORS = (
 
 
 def _is_network_error(exc: Exception) -> bool:
-    if isinstance(exc, ApiError):
-        # ApiError is ClientResponseError, which is in the
+    if isinstance(exc, RequestError):
+        # RequestError is ClientResponseError, which is in the
         # _NETWORK_ERRORS list, but it should be handled
         # separately.
         return False
@@ -51,17 +53,22 @@ def _is_network_error(exc: Exception) -> bool:
 
 
 def _is_throttling_error(exc: Exception) -> bool:
-    return isinstance(exc, ApiError) and exc.status == 429
+    return isinstance(exc, RequestError) and exc.status == 429
 
 
 def _is_server_error(exc: Exception) -> bool:
-    return isinstance(exc, ApiError) and exc.status >= 500
+    return isinstance(exc, RequestError) and exc.status >= 500
+
+
+def _is_retriable_query_error(exc: Exception) -> bool:
+    return isinstance(exc, QueryError) and exc.retriable and exc.max_retries > 0
 
 
 autoextract_retry_condition = (
     retry_if_exception(_is_throttling_error) |
     retry_if_exception(_is_network_error) |
-    retry_if_exception(_is_server_error)
+    retry_if_exception(_is_server_error) |
+    retry_if_exception(_is_retriable_query_error)
 )
 
 
@@ -86,6 +93,7 @@ class autoextract_wait_strategy(wait_base):
             wait_random(3, 7) + wait_random_exponential(multiplier=1, max=55)
         )
         self.server_wait = self.network_wait
+        self.retriable_wait = self.network_wait
 
     def __call__(self, retry_state: RetryCallState) -> float:
         exc = retry_state.outcome.exception()
@@ -95,6 +103,11 @@ class autoextract_wait_strategy(wait_base):
             return self.network_wait(retry_state=retry_state)
         elif _is_server_error(exc):
             return self.server_wait(retry_state=retry_state)
+        elif _is_retriable_query_error(exc):
+            return max(
+                exc.retry_seconds,
+                self.retriable_wait(retry_state=retry_state)
+            )
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
 
@@ -102,8 +115,10 @@ class autoextract_wait_strategy(wait_base):
 class autoextract_stop_strategy(stop_base):
     def __init__(self):
         self.stop_on_throttling_error = stop_never
-        self.stop_on_network_error = stop_after_delay(15 * 60)
-        self.stop_on_server_error = self.stop_on_network_error
+        self.stop_after_15_minutes = stop_after_delay(15 * 60)
+        self.stop_on_network_error = self.stop_after_15_minutes
+        self.stop_on_server_error = self.stop_after_15_minutes
+        self.stop_on_retriable_query_error = self.stop_after_15_minutes
 
     def __call__(self, retry_state: RetryCallState) -> bool:
         exc = retry_state.outcome.exception()
@@ -113,8 +128,21 @@ class autoextract_stop_strategy(stop_base):
             return self.stop_on_network_error(retry_state)
         elif _is_server_error(exc):
             return self.stop_on_server_error(retry_state)
+        elif _is_retriable_query_error(exc):
+            return (
+                self.stop_on_retriable_query_error |
+                stop_after_attempt(exc.max_retries)
+            )(retry_state)
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
+
+
+def _exception_factory(fut):
+    exc = fut.exception()
+    if isinstance(exc, QueryError):
+        return QueryRetryError(fut)
+
+    return RetryError(fut)
 
 
 autoextract_retry = retry(
@@ -123,4 +151,5 @@ autoextract_retry = retry(
     stop=autoextract_stop_strategy(),
     before_sleep=before_sleep_log(logger, logging.DEBUG),
     after=after_log(logger, logging.DEBUG),
+    retry_error_cls=_exception_factory,
 )

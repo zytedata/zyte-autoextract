@@ -24,7 +24,7 @@ logger = logging.getLogger('autoextract')
 
 
 async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
-              api_key=None):
+              api_key=None, max_query_error_retries=0):
     agg_stats = AggStats()
     async with create_session() as session:
         result_iter = request_parallel_as_completed(
@@ -34,6 +34,7 @@ async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
             session=session,
             api_key=api_key,
             agg_stats=agg_stats,
+            max_query_error_retries=max_query_error_retries
         )
         pbar = tqdm.tqdm(smoothing=0, leave=True, total=len(query), miniters=1,
                          unit="url")
@@ -116,6 +117,12 @@ if __name__ == '__main__':
                    choices=["DEBUG", "INFO", "WARNING", "ERROR"],
                    help="log level")
     p.add_argument("--shuffle", help="Shuffle input URLs", action="store_true")
+    p.add_argument("--max-query-error-retries", type=int, default=0,
+                   help="Max number of Query-level error retries. "
+                        "Enable Query-level error retries to increase the "
+                        "success rate at the cost of more requests being "
+                        "performed. It is recommended if you are interested "
+                        "in a higher success rate.")
     args = p.parse_args()
     logging.basicConfig(level=getattr(logging, args.loglevel))
 
@@ -133,6 +140,7 @@ if __name__ == '__main__':
                n_conn=args.n_conn,
                batch_size=args.batch_size,
                stop_on_errors=False,
-               api_key=args.api_key)
+               api_key=args.api_key,
+               max_query_error_retries=args.max_query_error_retries)
     loop.run_until_complete(coro)
     loop.close()

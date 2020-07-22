@@ -249,7 +249,7 @@ async def request_raw(query: Query,
         # successfully retry failing requests.
         #
         # In addition to handle_retries=True, QueryRetryError also depends on
-        # max_query_error_retries being a non-nullable positive integer.
+        # max_query_error_retries being greater than 0.
         request = autoextract_retry(request)
 
     try:

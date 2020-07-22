@@ -86,7 +86,7 @@ class RequestProcessor:
 
         Return successful queries and also failed ones.
 
-        If `self._handle_exceptions` is True,
+        If `self._max_retries` is greater than 0,
         this method might raise a `QueryError` exception.
 
         If multiple `QueryError` exceptions are parsed,

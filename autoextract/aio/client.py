@@ -180,7 +180,8 @@ async def request_raw(query: Query,
         warnings.warn(
             "You've specified a max number of Query-level error retries, "
             "but retries are disabled. Consider passing the handle_retries "
-            "argument as True."
+            "argument as True.",
+            stacklevel=2
         )
 
     # Keep state between executions/retries

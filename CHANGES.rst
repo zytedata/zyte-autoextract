@@ -1,6 +1,24 @@
 Changes
 =======
 
+0.3.0 (TBA)
+-----------
+
+In this release retry-related features are added or improved.
+It is now possible to fix some of the temporary errors
+by enabling query-level retries, and the default retry behavior is improved.
+
+* **backwards-incompatible**: autoextract.aio.ApiError is renamed
+  to autoextract.aio.RequestError
+* ``max_query_error_retries`` argument is added to
+  ``autoextract.aio.request_raw`` and
+  ``autoextract.aio.request_parallel_as_completed`` functions; it allows to
+  enable retries of temporary query-level errors returned by the API.
+* CLI: added ``--max-query-error-retries`` option to retry temporary
+  query-level errors.
+* HTTP 500 errors from server are retried now;
+* documentation and test improvements.
+
 0.2.0 (2020-04-15)
 ------------------
 

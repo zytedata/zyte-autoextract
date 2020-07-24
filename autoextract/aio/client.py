@@ -280,7 +280,6 @@ def request_parallel_as_completed(query: Query,
                                   batch_size=1,
                                   n_conn=1,
                                   agg_stats: AggStats = None,
-                                  handle_retries=True,
                                   max_query_error_retries=0,
                                   ) -> Iterator[asyncio.Future]:
     """ Send multiple requests to AutoExtract API in parallel.
@@ -307,6 +306,9 @@ def request_parallel_as_completed(query: Query,
 
     ``agg_stats`` argument allows to keep track of various stats; pass an
     ``AggStats`` instance, and it'll be updated.
+
+    Use ``max_query_error_retries > 0`` if you want to to enable Query-level
+    errors to be retried.
     """
     sem = asyncio.Semaphore(n_conn)
 
@@ -317,7 +319,6 @@ def request_parallel_as_completed(query: Query,
                                      endpoint=endpoint,
                                      session=session,
                                      agg_stats=agg_stats,
-                                     handle_retries=handle_retries,
                                      max_query_error_retries=max_query_error_retries,
                                      )
 

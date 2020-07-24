@@ -1,8 +1,8 @@
 Changes
 =======
 
-0.3.0 (TBA)
------------
+0.3.0 (2020-07-24)
+------------------
 
 In this release retry-related features are added or improved.
 It is now possible to fix some of the temporary errors

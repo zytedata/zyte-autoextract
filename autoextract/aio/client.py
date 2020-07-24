@@ -307,7 +307,7 @@ def request_parallel_as_completed(query: Query,
     ``agg_stats`` argument allows to keep track of various stats; pass an
     ``AggStats`` instance, and it'll be updated.
 
-    Use ``max_query_error_retries > 0`` if you want to to enable Query-level
+    Use ``max_query_error_retries > 0`` if you want Query-level
     errors to be retried.
     """
     sem = asyncio.Semaphore(n_conn)

@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.4.0 (2020-08-17)
+------------------
+
+``autoextract.Request`` helper class now allows to set arbitrary
+parameters for AutoExtract requests - they can be passed in ``extra`` argument.
+
 0.3.0 (2020-07-24)
 ------------------
 

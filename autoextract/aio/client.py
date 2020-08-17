@@ -275,7 +275,7 @@ async def request_raw(query: Query,
 def request_parallel_as_completed(query: Query,
                                   api_key: Optional[str] = None,
                                   *,
-                                  endpoint: str = API_ENDPOINT,
+                                  endpoint: Optional[str] = None,
                                   session: Optional[aiohttp.ClientSession] = None,
                                   batch_size=1,
                                   n_conn=1,
@@ -310,6 +310,7 @@ def request_parallel_as_completed(query: Query,
     Use ``max_query_error_retries > 0`` if you want Query-level
     errors to be retried.
     """
+    endpoint = API_ENDPOINT if endpoint is None else endpoint
     sem = asyncio.Semaphore(n_conn)
 
     async def _request(batch_query):

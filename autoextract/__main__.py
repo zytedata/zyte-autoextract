@@ -24,7 +24,7 @@ logger = logging.getLogger('autoextract')
 
 
 async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
-              api_key=None, max_query_error_retries=0):
+              api_key=None, api_endpoint=None, max_query_error_retries=0):
     agg_stats = AggStats()
     async with create_session() as session:
         result_iter = request_parallel_as_completed(
@@ -33,6 +33,7 @@ async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
             batch_size=batch_size,
             session=session,
             api_key=api_key,
+            endpoint=api_endpoint,
             agg_stats=agg_stats,
             max_query_error_retries=max_query_error_retries
         )
@@ -113,6 +114,8 @@ if __name__ == '__main__':
                    help="Scrapinghub AutoExtract API key. "
                         "You can also set %s environment variable instead "
                         "of using this option." % ENV_VARIABLE)
+    p.add_argument("--api-endpoint",
+                   help="Scrapinghub AutoExtract API endpoint.")
     p.add_argument("--loglevel", "-L", default="INFO",
                    choices=["DEBUG", "INFO", "WARNING", "ERROR"],
                    help="log level")
@@ -141,6 +144,7 @@ if __name__ == '__main__':
                batch_size=args.batch_size,
                stop_on_errors=False,
                api_key=args.api_key,
+               api_endpoint=args.api_endpoint,
                max_query_error_retries=args.max_query_error_retries)
     loop.run_until_complete(coro)
     loop.close()

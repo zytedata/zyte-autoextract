@@ -297,6 +297,31 @@ There is one difference: ``articleBodyRaw`` parameter is set to ``False``
 by default when Request or its variants are used, while it is ``True``
 by default in the API.
 
+You can override API params passing a dictionary with extra data using the
+``extra`` argument. Note that it will overwrite any previous configuration
+made using standard attributes like ``articleBodyRaw`` and ``fullHtml``.
+
+Extra parameters example::
+
+    request = ArticleRequest(
+        url=url,
+        fullHtml=True,
+        extra={
+            "customField": "custom value",
+            "fullHtml": False
+        }
+    )
+
+This will generate a query that looks like this::
+
+    {
+        "url": url,
+        "pageType": "article",
+        "fullHtml": False,  # our extra parameter overrides the previous value
+        "customField": "custom value"  # not a default param but defined even then
+    }
+
+
 Contributing
 ============
 

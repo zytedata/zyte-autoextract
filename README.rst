@@ -293,8 +293,8 @@ or this::
 
     query = [ArticleRequest(url) for url in urls]
 
-There is one difference: ``articleBodyRaw`` parameter is set to ``false``
-by default when Request or its variants are used, while it is ``true``
+There is one difference: ``articleBodyRaw`` parameter is set to ``False``
+by default when Request or its variants are used, while it is ``True``
 by default in the API.
 
 Contributing

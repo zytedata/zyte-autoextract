@@ -272,7 +272,7 @@ To query AutoExtract you need to create a dict with request parameters, e.g.::
 
     {'url': 'http://example.com.foo', 'pageType': 'article'}
 
-To simplify the library usage and avoid typos, scrapinghub-autpextract
+To simplify the library usage and avoid typos, scrapinghub-autoextract
 provides helper classes for constructing these dicts::
 
 * autoextract.Request

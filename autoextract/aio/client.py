@@ -128,7 +128,7 @@ class RequestProcessor:
 
 async def request_raw(query: Query,
                       api_key: Optional[str] = None,
-                      endpoint: str = API_ENDPOINT,
+                      endpoint: Optional[str] = None,
                       *,
                       handle_retries: bool = True,
                       max_query_error_retries: int = 0,
@@ -173,6 +173,8 @@ async def request_raw(query: Query,
     See :func:`request_parallel_as_completed` for a more high-level
     interface to send requests in parallel.
     """
+    endpoint = API_ENDPOINT if endpoint is None else endpoint
+
     if agg_stats is None:
         agg_stats = AggStats()  # dummy stats, to simplify code
 
@@ -310,7 +312,6 @@ def request_parallel_as_completed(query: Query,
     Use ``max_query_error_retries > 0`` if you want Query-level
     errors to be retried.
     """
-    endpoint = API_ENDPOINT if endpoint is None else endpoint
     sem = asyncio.Semaphore(n_conn)
 
     async def _request(batch_query):

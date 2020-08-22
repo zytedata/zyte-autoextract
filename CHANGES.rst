@@ -1,6 +1,12 @@
 Changes
 =======
 
+0.5.0 (2020-08-21)
+------------------
+
+* add ``--api-endpoint`` option to the command line utility
+* improves documentation adding details about ``Request``'s extra parameters
+
 0.4.0 (2020-08-17)
 ------------------
 

@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.5.1 (2020-08-21)
+------------------
+
+* fix a problem that was preventing calls to ``request_raw`` when ``endpoint`` argument was ``None``
+
 0.5.0 (2020-08-21)
 ------------------
 

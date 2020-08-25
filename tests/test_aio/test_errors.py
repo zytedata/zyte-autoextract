@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from autoextract.aio.errors import QueryError
+from autoextract.aio.errors import _QueryError
 
 
 def get_query_error(message):
@@ -35,19 +35,19 @@ def get_query_error(message):
 def test_query_error(message, retriable):
     query_error = get_query_error(message)
 
-    exc = QueryError.from_query_result(query_error)
+    exc = _QueryError.from_query_result(query_error)
     assert exc.query == query_error["query"]
     assert exc.message == query_error["error"]
     assert exc.retriable is retriable
     assert exc.domain_occupied is None
-    assert str(exc) == f"QueryError: query={exc.query}, message={exc.message}, max_retries={exc.max_retries}"
+    assert str(exc) == f"_QueryError: query={exc.query}, message={exc.message}, max_retries={exc.max_retries}"
 
-    exc = QueryError(query=query_error["query"], message=query_error["error"])
+    exc = _QueryError(query=query_error["query"], message=query_error["error"])
     assert exc.query == query_error["query"]
     assert exc.message == query_error["error"]
     assert exc.retriable is retriable
     assert exc.domain_occupied is None
-    assert str(exc) == f"QueryError: query={exc.query}, message={exc.message}, max_retries={exc.max_retries}"
+    assert str(exc) == f"_QueryError: query={exc.query}, message={exc.message}, max_retries={exc.max_retries}"
 
 
 @pytest.mark.parametrize("message, domain, retry_seconds", (
@@ -60,7 +60,7 @@ def test_query_error(message, retriable):
 ))
 def test_domain_occupied_query_error(message, domain, retry_seconds):
     query_error = get_query_error(message)
-    exc = QueryError.from_query_result(query_error)
+    exc = _QueryError.from_query_result(query_error)
     assert exc.domain_occupied.domain == domain
     assert exc.domain_occupied.retry_seconds == retry_seconds
     assert exc.retry_seconds == retry_seconds
@@ -74,6 +74,6 @@ def test_domain_occupied_query_error(message, domain, retry_seconds):
 ))
 def test_invalid_domain_occupied_query_error(message):
     query_error = get_query_error(message)
-    exc = QueryError.from_query_result(query_error)
+    exc = _QueryError.from_query_result(query_error)
     assert exc.domain_occupied is None
     assert exc.retry_seconds == 0.0

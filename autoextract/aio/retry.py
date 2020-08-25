@@ -25,7 +25,7 @@ from tenacity import (
 from tenacity.stop import stop_base, stop_never
 from tenacity.wait import wait_base
 
-from .errors import RequestError, QueryError, QueryRetryError
+from .errors import RequestError, _QueryError, QueryRetryError
 
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def _is_server_error(exc: Exception) -> bool:
 
 
 def _is_retriable_query_error(exc: Exception) -> bool:
-    return isinstance(exc, QueryError) and exc.retriable and exc.max_retries > 0
+    return isinstance(exc, _QueryError) and exc.retriable and exc.max_retries > 0
 
 
 autoextract_retry_condition = (
@@ -139,7 +139,7 @@ class autoextract_stop_strategy(stop_base):
 
 def _exception_factory(fut):
     exc = fut.exception()
-    if isinstance(exc, QueryError):
+    if isinstance(exc, _QueryError):
         return QueryRetryError(fut)
 
     return RetryError(fut)

@@ -1,7 +1,7 @@
 import pytest
 
 from autoextract.aio.client import RequestProcessor
-from autoextract.aio.errors import QueryError
+from autoextract.aio.errors import _QueryError
 
 
 def test_request_processor_without_retries():
@@ -120,7 +120,7 @@ def test_request_processor_with_not_retriable_error():
         },
     ]
 
-    # When processing this response, no QueryError should be raised
+    # When processing this response, no _QueryError should be raised
     # because the 404 error is not retriable
     results = request_processor.process_results(first_response)
 
@@ -186,7 +186,7 @@ def test_request_processor_with_retries():
     ]
 
     # An exception should be raised while processing this response
-    with pytest.raises(QueryError):
+    with pytest.raises(_QueryError):
         request_processor.process_results(first_response)
 
     # Latest results should be equal to our response
@@ -214,7 +214,7 @@ def test_request_processor_with_retries():
 
     # If we try to process this response,
     # it should raise an exception again
-    with pytest.raises(QueryError):
+    with pytest.raises(_QueryError):
         request_processor.process_results(second_response)
 
     # Latest results should be equal to a combination of our two responses:
@@ -317,8 +317,8 @@ def test_request_processor_exception_priority(
         },
     ]
 
-    # If we try to process our response, a QueryError should be raised
-    with pytest.raises(QueryError) as exc_info:
+    # If we try to process our response, a _QueryError should be raised
+    with pytest.raises(_QueryError) as exc_info:
         request_processor.process_results(first_response)
 
     assert bool(exc_info.value.domain_occupied) is domain_occupied
@@ -326,7 +326,7 @@ def test_request_processor_exception_priority(
 
     # The same thing should happen if the order of the queries is inverted
     first_response.reverse()
-    with pytest.raises(QueryError) as exc_info:
+    with pytest.raises(_QueryError) as exc_info:
         request_processor.process_results(first_response)
 
     assert bool(exc_info.value.domain_occupied) is domain_occupied

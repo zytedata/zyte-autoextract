@@ -16,7 +16,7 @@ from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
 from .retry import autoextract_retry, QueryRetryError
-from .errors import RequestError, QueryError
+from .errors import RequestError, _QueryError
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -85,9 +85,9 @@ class RequestProcessor:
         Return successful queries and also failed ones.
 
         If `self._max_retries` is greater than 0,
-        this method might raise a `QueryError` exception.
+        this method might raise a `_QueryError` exception.
 
-        If multiple `QueryError` exceptions are parsed,
+        If multiple `_QueryError` exceptions are parsed,
         the one with the longest timeout is raised.
 
         Successful requests are saved in `self._complete_queries`
@@ -106,7 +106,7 @@ class RequestProcessor:
         self._reset()
         for query_result in query_results:
             if self._max_retries and "error" in query_result:
-                query_exception = QueryError.from_query_result(
+                query_exception = _QueryError.from_query_result(
                     query_result, self._max_retries)
                 if query_exception.retriable:
                     self._enqueue_error(query_result, query_exception)
@@ -257,7 +257,7 @@ async def request_raw(query: Query,
         # Try to make a batch request
         result = await request()
     except QueryRetryError:
-        # If Tenacity fails to retry a QueryError because the max number of
+        # If Tenacity fails to retry a _QueryError because the max number of
         # retries or a timeout was reached, get latest results combining
         # error and successes and consider it as the final result.
         result = request_processor.get_latest_results()

@@ -16,7 +16,7 @@ from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
 from .retry import autoextract_retry, QueryRetryError
-from .errors import RequestError, QueryError
+from .errors import RequestError, _QueryError
 
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -106,7 +106,7 @@ class RequestProcessor:
         self._reset()
         for query_result in query_results:
             if self._max_retries and "error" in query_result:
-                query_exception = QueryError.from_query_result(
+                query_exception = _QueryError.from_query_result(
                     query_result, self._max_retries)
                 if query_exception.retriable:
                     self._enqueue_error(query_result, query_exception)

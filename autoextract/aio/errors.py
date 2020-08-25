@@ -57,7 +57,7 @@ class RequestError(ClientResponseError):
                f"headers={self.headers}, body={self.response_content}"
 
 
-class QueryError(Exception):
+class _QueryError(Exception):
     """ Exception which is raised when a Query-level error is returned.
     https://doc.scrapinghub.com/autoextract.html#query-level
     """

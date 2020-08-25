@@ -86,7 +86,7 @@ class _QueryError(Exception):
         self.domain_occupied = DomainOccupied.from_message(message)
 
     def __str__(self):
-        return f"QueryError: query={self.query}, message={self.message}, " \
+        return f"_QueryError: query={self.query}, message={self.message}, " \
                f"max_retries={self.max_retries}"
 
     @classmethod
@@ -111,6 +111,6 @@ class _QueryError(Exception):
 
 class QueryRetryError(RetryError):
     """This exception is raised when Tenacity reaches the max retry count or
-    timeouts when retrying Query-level errors (see :class:``.QueryError``).
+    timeouts when retrying Query-level errors (see :class:``._QueryError``).
     """
     pass

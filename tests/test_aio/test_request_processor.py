@@ -120,7 +120,7 @@ def test_request_processor_with_not_retriable_error():
         },
     ]
 
-    # When processing this response, no QueryError should be raised
+    # When processing this response, no _QueryError should be raised
     # because the 404 error is not retriable
     results = request_processor.process_results(first_response)
 
@@ -317,7 +317,7 @@ def test_request_processor_exception_priority(
         },
     ]
 
-    # If we try to process our response, a QueryError should be raised
+    # If we try to process our response, a _QueryError should be raised
     with pytest.raises(_QueryError) as exc_info:
         request_processor.process_results(first_response)
 

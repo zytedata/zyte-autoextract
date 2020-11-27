@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.5.2 (2020-11-27)
+------------------
+
+* ``QueryError`` is renamed to ``_QueryError``, as this is not an error
+  users of the library ever see.
+* Retrials were broken by having userAgent in the userQuery API output;
+  temporary workaround is added to make retrials work again.
+
 0.5.1 (2020-08-21)
 ------------------
 

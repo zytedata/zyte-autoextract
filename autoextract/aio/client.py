@@ -69,6 +69,11 @@ class RequestProcessor:
         self._retriable_query_exceptions.append(query_exception)
 
         user_query = query_result["query"]["userQuery"]
+
+        # Temporary workaround for a backend issue. Won't be needed soon.
+        if 'userAgent' in user_query:
+            del user_query['userAgent']
+
         self.pending_queries.append(user_query)
 
     def get_latest_results(self):

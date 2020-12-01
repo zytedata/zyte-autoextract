@@ -139,6 +139,7 @@ async def request_raw(query: Query,
                       max_query_error_retries: int = 0,
                       session: Optional[aiohttp.ClientSession] = None,
                       agg_stats: AggStats = None,
+                      headers: Optional[Dict[str, str]] = None,
                       ) -> Result:
     """ Send a request to Scrapinghub AutoExtract API.
 
@@ -175,6 +176,8 @@ async def request_raw(query: Query,
     ``agg_stats`` argument allows to keep track of various stats; pass an
     ``AggStats`` instance, and it'll be updated.
 
+    Additional ``headers`` for the requests can be provided.
+
     See :func:`request_parallel_as_completed` for a more high-level
     interface to send requests in parallel.
     """
@@ -199,7 +202,7 @@ async def request_raw(query: Query,
 
     post = _post_func(session)
     auth = aiohttp.BasicAuth(get_apikey(api_key))
-    headers = {'User-Agent': user_agent(aiohttp)}
+    headers = {'User-Agent': user_agent(aiohttp), **(headers or {})}
 
     response_stats = []
     start_global = time.perf_counter()

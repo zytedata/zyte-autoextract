@@ -9,6 +9,7 @@ from typing import Optional, Dict, List, Iterator
 from functools import partial
 
 import aiohttp
+from aiohttp import TCPConnector
 
 from autoextract.constants import API_ENDPOINT, API_TIMEOUT
 from autoextract.apikey import get_apikey
@@ -23,9 +24,11 @@ AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
                                         sock_connect=10)
 
 
-def create_session(**kwargs) -> aiohttp.ClientSession:
+def create_session(connection_pool_size=100, **kwargs) -> aiohttp.ClientSession:
     """ Create a session with parameters suited for AutoExtract """
     kwargs.setdefault('timeout', AIO_API_TIMEOUT)
+    if "connector" not in kwargs:
+        kwargs["connector"] = TCPConnector(limit=connection_pool_size)
     return aiohttp.ClientSession(**kwargs)
 
 
@@ -173,7 +176,8 @@ async def request_raw(query: Query,
     taken from SCRAPINGHUB_AUTOEXTRACT_KEY environment variable.
 
     ``session`` is an optional aiohttp.ClientSession object;
-    use it to enable HTTP Keep-Alive.
+    use it to enable HTTP Keep-Alive and to control connection
+    pool size.
 
     This function retries http 429 errors and network errors by default;
     this allows to handle server-side throttling properly.

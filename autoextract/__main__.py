@@ -26,7 +26,7 @@ logger = logging.getLogger('autoextract')
 async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
               api_key=None, api_endpoint=None, max_query_error_retries=0):
     agg_stats = AggStats()
-    async with create_session() as session:
+    async with create_session(connection_pool_size=n_conn) as session:
         result_iter = request_parallel_as_completed(
             query=query,
             n_conn=n_conn,

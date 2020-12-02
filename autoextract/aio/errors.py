@@ -57,27 +57,37 @@ class RequestError(ClientResponseError):
                f"headers={self.headers}, body={self.response_content}"
 
 
+_RETRIABLE_ERR_MSGS = [
+    "query timed out",
+    "Downloader error: No response",
+    "Downloader error: http50",
+    "Downloader error: 50",
+    "Downloader error: GlobalTimeoutError",
+    "Proxy error: banned",
+    "Proxy error: internal_error",
+    "Proxy error: nxdomain",
+    "Proxy error: timeout",
+    "Proxy error: ssl_tunnel_error",
+    "Proxy error: msgtimeout",
+    "Proxy error: econnrefused",
+]
+
+
+_RETRIABLE_ERR_MSGS_RE = re.compile(
+    "|".join(re.escape(msg) for msg in _RETRIABLE_ERR_MSGS), re.IGNORECASE
+)
+
+
+def is_retriable_error_msg(msg: Optional[str]) -> bool:
+    """True if the error is one of those that could benefit from a retry"""
+    msg = msg or ""
+    return bool(_RETRIABLE_ERR_MSGS_RE.search(msg))
+
+
 class _QueryError(Exception):
     """ Exception which is raised when a Query-level error is returned.
     https://doc.scrapinghub.com/autoextract.html#query-level
     """
-
-    RETRIABLE_MESSAGES = {
-        message.lower().strip()
-        for message in [
-            "query timed out",
-            "Downloader error: No response (network5)",
-            "Downloader error: http50",
-            "Downloader error: GlobalTimeoutError",
-            "Proxy error: banned",
-            "Proxy error: internal_error",
-            "Proxy error: nxdomain",
-            "Proxy error: timeout",
-            "Proxy error: ssl_tunnel_error",
-            "Proxy error: msgtimeout",
-            "Proxy error: econnrefused",
-        ]
-    }
 
     def __init__(self, query: dict, message: str, max_retries: int = 0):
         self.query = query
@@ -98,14 +108,12 @@ class _QueryError(Exception):
     def retriable(self) -> bool:
         if self.domain_occupied:
             return True
-
-        return self.message.lower().strip() in self.RETRIABLE_MESSAGES
+        return is_retriable_error_msg(self.message)
 
     @property
     def retry_seconds(self) -> float:
         if self.domain_occupied:
             return self.domain_occupied.retry_seconds
-
         return 0.0
 
 
@@ -114,3 +122,40 @@ class QueryRetryError(RetryError):
     timeouts when retrying Query-level errors (see :class:``._QueryError``).
     """
     pass
+
+
+# Based on https://doc.scrapinghub.com/autoextract.html#reference
+_NON_BILLABLE_ERR_MSGS = [
+    "malformed url",
+    "URL cannot be longer than",
+    "non-HTTP schemas are not allowed",
+    "Extraction not permitted for this URL",
+]
+
+
+_NON_BILLABLE_ERR_MSGS_RE = re.compile(
+    "|".join(re.escape(msg) for msg in _NON_BILLABLE_ERR_MSGS), re.IGNORECASE
+)
+
+
+def is_billable_error_msg(msg: Optional[str]) -> bool:
+    """
+    Return true if the error message is billable. Based on
+    https://doc.scrapinghub.com/autoextract.html#reference
+
+    >>> is_billable_error_msg(None)
+    True
+    >>> is_billable_error_msg("")
+    True
+    >>> is_billable_error_msg(" URL cannot be longer than 4096 UTF-16 characters ")
+    False
+    >>> is_billable_error_msg(" malformed url ")
+    False
+    >>> is_billable_error_msg("Domain example.com is occupied, please retry in 23.5 seconds")
+    False
+    """
+    msg = msg or ""
+    is_domain_ocupied = bool(DomainOccupied.from_message(msg))
+    is_no_billable = (_NON_BILLABLE_ERR_MSGS_RE.search(msg) or
+                      is_domain_ocupied)
+    return not is_no_billable

@@ -22,8 +22,7 @@ from tenacity import (
     before_sleep_log,
     after_log,
 )
-from tenacity.stop import stop_base, stop_never
-from tenacity.wait import wait_base
+from tenacity.stop import stop_never
 
 from .errors import RequestError, _QueryError, QueryRetryError
 
@@ -64,79 +63,6 @@ def _is_retriable_query_error(exc: Exception) -> bool:
     return isinstance(exc, _QueryError) and exc.retriable and exc.max_retries > 0
 
 
-autoextract_retry_condition = (
-    retry_if_exception(_is_throttling_error) |
-    retry_if_exception(_is_network_error) |
-    retry_if_exception(_is_server_error) |
-    retry_if_exception(_is_retriable_query_error)
-)
-
-
-class autoextract_wait_strategy(wait_base):
-    def __init__(self):
-        # throttling
-        self.throttling_wait = wait_chain(
-            # always wait 20-40s first
-            wait_fixed(20) + wait_random(0, 20),
-
-            # wait 20-40s again
-            wait_fixed(20) + wait_random(0, 20),
-
-            # wait from 30 to 630s, with full jitter and exponentially
-            # increasing max wait time
-            wait_fixed(30) + wait_random_exponential(multiplier=1, max=600)
-        )
-
-        # connection errors, other client and server failures
-        self.network_wait = (
-            # wait from 3s to ~1m
-            wait_random(3, 7) + wait_random_exponential(multiplier=1, max=55)
-        )
-        self.server_wait = self.network_wait
-        self.retriable_wait = self.network_wait
-
-    def __call__(self, retry_state: RetryCallState) -> float:
-        exc = retry_state.outcome.exception()
-        if _is_throttling_error(exc):
-            return self.throttling_wait(retry_state=retry_state)
-        elif _is_network_error(exc):
-            return self.network_wait(retry_state=retry_state)
-        elif _is_server_error(exc):
-            return self.server_wait(retry_state=retry_state)
-        elif _is_retriable_query_error(exc):
-            return max(
-                exc.retry_seconds,
-                self.retriable_wait(retry_state=retry_state)
-            )
-        else:
-            raise RuntimeError("Invalid retry state exception: %s" % exc)
-
-
-class autoextract_stop_strategy(stop_base):
-    def __init__(self):
-        self.stop_on_throttling_error = stop_never
-        self.stop_after_15_minutes = stop_after_delay(15 * 60)
-        self.stop_on_network_error = self.stop_after_15_minutes
-        self.stop_on_server_error = self.stop_after_15_minutes
-        self.stop_on_retriable_query_error = self.stop_after_15_minutes
-
-    def __call__(self, retry_state: RetryCallState) -> bool:
-        exc = retry_state.outcome.exception()
-        if _is_throttling_error(exc):
-            return self.stop_on_throttling_error(retry_state)
-        elif _is_network_error(exc):
-            return self.stop_on_network_error(retry_state)
-        elif _is_server_error(exc):
-            return self.stop_on_server_error(retry_state)
-        elif _is_retriable_query_error(exc):
-            return (
-                self.stop_on_retriable_query_error |
-                stop_after_attempt(exc.max_retries)
-            )(retry_state)
-        else:
-            raise RuntimeError("Invalid retry state exception: %s" % exc)
-
-
 def _exception_factory(fut):
     exc = fut.exception()
     if isinstance(exc, _QueryError):
@@ -145,11 +71,97 @@ def _exception_factory(fut):
     return RetryError(fut)
 
 
-autoextract_retry = retry(
-    wait=autoextract_wait_strategy(),
-    retry=autoextract_retry_condition,
-    stop=autoextract_stop_strategy(),
-    before_sleep=before_sleep_log(logger, logging.DEBUG),
-    after=after_log(logger, logging.DEBUG),
-    retry_error_cls=_exception_factory,
-)
+class RetryFactory:
+    """
+    Build custom retry configuration
+    """
+    retry_condition = (
+            retry_if_exception(_is_throttling_error) |
+            retry_if_exception(_is_network_error) |
+            retry_if_exception(_is_server_error) |
+            retry_if_exception(_is_retriable_query_error)
+    )
+    # throttling
+    throttling_wait = wait_chain(
+        # always wait 20-40s first
+        wait_fixed(20) + wait_random(0, 20),
+
+        # wait 20-40s again
+        wait_fixed(20) + wait_random(0, 20),
+
+        # wait from 30 to 630s, with full jitter and exponentially
+        # increasing max wait time
+        wait_fixed(30) + wait_random_exponential(multiplier=1, max=600)
+    )
+
+    # connection errors, other client and server failures
+    network_error_wait = (
+        # wait from 3s to ~1m
+        wait_random(3, 7) + wait_random_exponential(multiplier=1, max=55)
+    )
+    server_error_wait = network_error_wait
+    retriable_query_error_wait = network_error_wait
+    throttling_stop = stop_never
+    network_error_stop = stop_after_delay(15 * 60)
+    server_error_stop = stop_after_delay(15 * 60)
+    retryable_query_error_stop = stop_after_delay(15 * 60)
+
+    def __init__(self, **kwargs):
+        mutable_attributes = {attrib for attrib in dir(self)
+                              if not attrib.startswith("_")}
+        for k, v in kwargs:
+            if not k in mutable_attributes:
+                raise TypeError(f"Attribute {k} is invalid. Any of "
+                                f"{mutable_attributes} was expected")
+            setattr(self, k, v)
+
+    def wait(self, retry_state: RetryCallState) -> float:
+        exc = retry_state.outcome.exception()
+        if _is_throttling_error(exc):
+            return self.throttling_wait(retry_state=retry_state)
+        elif _is_network_error(exc):
+            return self.network_error_wait(retry_state=retry_state)
+        elif _is_server_error(exc):
+            return self.server_error_wait(retry_state=retry_state)
+        elif _is_retriable_query_error(exc):
+            return max(
+                exc.retry_seconds,
+                self.retriable_query_error_wait(retry_state=retry_state)
+            )
+        else:
+            raise RuntimeError("Invalid retry state exception: %s" % exc)
+
+    def stop(self, retry_state: RetryCallState) -> bool:
+        exc = retry_state.outcome.exception()
+        if _is_throttling_error(exc):
+            return self.throttling_stop(retry_state)
+        elif _is_network_error(exc):
+            return self.network_error_stop(retry_state)
+        elif _is_server_error(exc):
+            return self.server_error_stop(retry_state)
+        elif _is_retriable_query_error(exc):
+            return (
+                self.retryable_query_error_stop |
+                stop_after_attempt(exc.max_retries)
+            )(retry_state)
+        else:
+            raise RuntimeError("Invalid retry state exception: %s" % exc)
+
+    def before_sleep(self, retry_state: RetryCallState):
+        return before_sleep_log(logger, logging.DEBUG)
+
+    def after(self, retry_state: RetryCallState):
+        return after_log(logger, logging.DEBUG)
+
+    def build(self):
+        return retry(
+            wait=self.wait,
+            retry=self.retry_condition,
+            stop=self.stop,
+            before_sleep=self.before_sleep,
+            after=self.after,
+            retry_error_cls=_exception_factory,
+        )
+
+
+autoextract_retry = RetryFactory().build()

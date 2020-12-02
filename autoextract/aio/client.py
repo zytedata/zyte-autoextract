@@ -16,8 +16,7 @@ from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
 from .retry import autoextract_retry, QueryRetryError
-from .errors import RequestError, _QueryError
-
+from .errors import RequestError, _QueryError, is_billable_error_msg
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
                                         sock_read=API_TIMEOUT + 30,
@@ -51,6 +50,9 @@ class RequestProcessor:
         self.pending_queries = query_as_dict_list(query)
         self._max_retries = max_retries
         self._complete_queries: List[Dict] = list()
+        self._n_extracted_queries: int = 0
+        self._n_query_responses: int = 0
+        self._n_billable_query_responses: int = 0
 
     def _reset(self):
         """Clear temporary variables between retries"""
@@ -84,6 +86,18 @@ class RequestProcessor:
         """
         return self._complete_queries + self._retriable_queries
 
+    def extracted_queries_count(self):
+        """Number of queries extracted without any error"""
+        return self._n_extracted_queries
+
+    def query_responses_count(self):
+        """Number of query responses received"""
+        return self._n_query_responses
+
+    def billable_query_responses_count(self):
+        """Number of billable query responses (some errors are billable)"""
+        return self._n_billable_query_responses
+
     def process_results(self, query_results):
         """Process query results.
 
@@ -110,6 +124,13 @@ class RequestProcessor:
         """
         self._reset()
         for query_result in query_results:
+            self._n_query_responses += 1
+            if not "error" in query_result:
+                self._n_extracted_queries += 1
+                self._n_billable_query_responses += 1
+            else:
+                if is_billable_error_msg(query_result["error"]):
+                    self._n_billable_query_responses += 1
             if self._max_retries and "error" in query_result:
                 query_exception = _QueryError.from_query_result(
                     query_result, self._max_retries)
@@ -140,6 +161,7 @@ async def request_raw(query: Query,
                       session: Optional[aiohttp.ClientSession] = None,
                       agg_stats: AggStats = None,
                       headers: Optional[Dict[str, str]] = None,
+                      retry_wrapper = None
                       ) -> Result:
     """ Send a request to Scrapinghub AutoExtract API.
 
@@ -178,10 +200,15 @@ async def request_raw(query: Query,
 
     Additional ``headers`` for the requests can be provided.
 
+    Default retry policy can be customized by providing a
+    ``retry_wrapper`` that can be built with a customized
+    :class:`autoextract.retry.RetryFactory`
+
     See :func:`request_parallel_as_completed` for a more high-level
     interface to send requests in parallel.
     """
     endpoint = API_ENDPOINT if endpoint is None else endpoint
+    retry_wrapper = retry_wrapper or autoextract_retry
 
     if agg_stats is None:
         agg_stats = AggStats()  # dummy stats, to simplify code
@@ -259,7 +286,7 @@ async def request_raw(query: Query,
         #
         # In addition to handle_retries=True, QueryRetryError also depends on
         # max_query_error_retries being greater than 0.
-        request = autoextract_retry(request)
+        request = retry_wrapper(request)
 
     try:
         # Try to make a batch request
@@ -272,6 +299,10 @@ async def request_raw(query: Query,
     except Exception:
         agg_stats.n_fatal_errors += 1
         raise
+    finally:
+        agg_stats.n_extracted_queries += request_processor.extracted_queries_count()
+        agg_stats.n_billable_query_responses += request_processor.billable_query_responses_count()
+        agg_stats.n_query_responses += request_processor.query_responses_count()
 
     result = Result(result)
     result.response_stats = response_stats

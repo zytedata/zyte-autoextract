@@ -19,12 +19,13 @@ def get_query_error(message):
 
 
 @pytest.mark.parametrize("message, retriable", (
-        ("Downloader error: http404", False),
-        ("query timed out", True),
+        (" downloader error: http404 bla", False),
+        ("ey query timed out ", True),
         ("Downloader error: No response (network5)", True),
         ("Downloader error: http50", True),
+        ("Downloader error: http504", True),
         ("Downloader error: GlobalTimeoutError", True),
-        ("Proxy error: banned", True),
+        ("Proxy error: banned. Because bla", True),
         ("Proxy error: internal_error", True),
         ("Proxy error: nxdomain", True),
         ("Proxy error: timeout", True),

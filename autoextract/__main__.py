@@ -57,6 +57,7 @@ async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
                     pbar.set_postfix_str(str(agg_stats))
         finally:
             pbar.close()
+    logger.debug(agg_stats.summary())
 
 
 def read_input(input_fp, intype, page_type):

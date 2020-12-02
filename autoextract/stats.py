@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import textwrap
 from typing import Optional
 import functools
 import time
@@ -28,16 +29,38 @@ class AggStats:
         self.n_429 = 0
         self.n_errors = 0
 
+        self.n_input_queries = 0
+        self.n_extracted_queries = 0  # Queries answered without any type of error
+        self.n_query_responses = 0
+        self.n_billable_query_responses = 0  # Some errors are also billed
+
     def __str__(self):
-        return "conn:{:0.2f}s, resp:{:0.2f}s, throttle:{:.1%}, err:{}+{}({:.1%}) | {:.1%} success".format(
+        return "conn:{:0.2f}s, resp:{:0.2f}s, throttle:{:.1%}, err:{}+{}({:.1%}) | success:{}/{}({:.1%})".format(
             self.time_connect_stats.mean(),
             self.time_total_stats.mean(),
             self.throttle_ratio(),
             self.n_errors - self.n_fatal_errors,
             self.n_fatal_errors,
             self.error_ratio(),
-            self.success_ratio(),
+            self.n_extracted_queries,
+            self.n_input_queries,
+            self.success_ratio()
         )
+
+    def summary(self):
+        return textwrap.dedent(f"""
+            Summary
+            -------
+            Mean connection time:    {self.time_connect_stats.mean():0.2f}
+            Mean response time:      {self.time_total_stats.mean():0.2f}
+            Throttle ratio:          {self.throttle_ratio():0.1%}
+            Attempts:                {self.n_attempts}
+            Errors:                  {self.error_ratio():0.1%}, fatal: {self.n_fatal_errors}, non fatal: {self.n_errors - self.n_fatal_errors}
+            Successful URLs:         {self.n_extracted_queries} of {self.n_input_queries}
+            Success ratio:           {self.success_ratio():0.1%}
+            Billable query responses: {self.n_billable_query_responses} of {self.n_query_responses} 
+        """)
+
 
     @zero_on_division_error
     def throttle_ratio(self):
@@ -49,7 +72,7 @@ class AggStats:
 
     @zero_on_division_error
     def success_ratio(self):
-        return self.n_results / (self.n_results + self.n_fatal_errors)
+        return self.n_extracted_queries / self.n_input_queries
 
 
 @attr.s

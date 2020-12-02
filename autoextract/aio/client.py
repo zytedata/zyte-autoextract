@@ -233,6 +233,7 @@ async def request_raw(query: Query,
 
     response_stats = []
     start_global = time.perf_counter()
+    agg_stats.n_input_queries += len(query)
 
     async def request():
         stats = ResponseStats.create(start_global)

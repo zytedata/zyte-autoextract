@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import textwrap
 from typing import Optional
 import functools
 import time
@@ -48,19 +47,24 @@ class AggStats:
         )
 
     def summary(self):
-        return textwrap.dedent(f"""
-            Summary
-            -------
-            Mean connection time:    {self.time_connect_stats.mean():0.2f}
-            Mean response time:      {self.time_total_stats.mean():0.2f}
-            Throttle ratio:          {self.throttle_ratio():0.1%}
-            Attempts:                {self.n_attempts}
-            Errors:                  {self.error_ratio():0.1%}, fatal: {self.n_fatal_errors}, non fatal: {self.n_errors - self.n_fatal_errors}
-            Successful URLs:         {self.n_extracted_queries} of {self.n_input_queries}
-            Success ratio:           {self.success_ratio():0.1%}
-            Billable query responses: {self.n_billable_query_responses} of {self.n_query_responses} 
-        """)
-
+        return (
+            "\n" +
+            "Summary\n" +
+            "-------\n" +
+            "Mean connection time:     {:0.2f}\n".format(self.time_connect_stats.mean()) +
+            "Mean response time:       {:0.2f}\n".format(self.time_total_stats.mean()) +
+            "Throttle ratio:           {:0.1%}\n".format(self.throttle_ratio()) +
+            "Attempts:                 {}\n".format(self.n_attempts) +
+            "Errors:                   {:0.1%}, fatal: {}, non fatal: {}\n".format(
+                self.error_ratio(),
+                self.n_fatal_errors,
+                self.n_errors - self.n_fatal_errors) +
+            "Successful URLs:          {} of {}\n".format(
+                self.n_extracted_queries, self.n_input_queries) +
+            "Success ratio:            {:0.1%}\n".format(self.success_ratio()) +
+            "Billable query responses: {} of {}\n".format(
+                self.n_billable_query_responses, self.n_query_responses)
+        )
 
     @zero_on_division_error
     def throttle_ratio(self):

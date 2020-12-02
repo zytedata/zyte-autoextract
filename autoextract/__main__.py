@@ -90,7 +90,7 @@ if __name__ == '__main__':
                    type=argparse.FileType("r", encoding='utf8'),
                    help="Input file with urls, url per line by default. The "
                         "Format can be changed using `--intype` argument.")
-    p.add_argument("--intype", default="txt", choices=["txt", "jl"], 
+    p.add_argument("--intype", default="txt", choices=["txt", "jl"],
                    help='Type of the input file (default: %(default)s). '
                         'Allowed values are "txt": input should be one '
                         'URL per line, and "jl": input should be a jsonlines '

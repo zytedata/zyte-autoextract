@@ -125,7 +125,7 @@ class RequestProcessor:
         self._reset()
         for query_result in query_results:
             self._n_query_responses += 1
-            if not "error" in query_result:
+            if "error" not in query_result:
                 self._n_extracted_queries += 1
                 self._n_billable_query_responses += 1
             else:
@@ -161,7 +161,7 @@ async def request_raw(query: Query,
                       session: Optional[aiohttp.ClientSession] = None,
                       agg_stats: AggStats = None,
                       headers: Optional[Dict[str, str]] = None,
-                      retry_wrapper = None
+                      retry_wrapper=None
                       ) -> Result:
     """ Send a request to Scrapinghub AutoExtract API.
 

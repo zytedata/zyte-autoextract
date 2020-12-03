@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import re
+from json import JSONDecodeError
 from typing import Optional
 
 from aiohttp import ClientResponseError
@@ -51,6 +53,27 @@ class RequestError(ClientResponseError):
     def __init__(self, *args, **kwargs):
         self.response_content = kwargs.pop("response_content")
         super().__init__(*args, **kwargs)
+
+    def error_data(self):
+        """
+        Parses request error ``response_content``
+        """
+        data = {}
+        if self.response_content:
+            try:
+                data = json.loads(self.response_content.decode("utf-8"))
+                if not isinstance(data, dict):
+                    data = {}
+                    logger.warning(
+                        "Wrong JSON format for RequestError content '{}'. "
+                        "A dict was expected".format(self.response_content)
+                    )
+            except (JSONDecodeError, UnicodeDecodeError) as _:  # noqa: F841
+                logger.warning(
+                    "Wrong JSON format for RequestError content '{}'".format(
+                        self.response_content)
+                )
+        return data
 
     def __str__(self):
         return f"RequestError: {self.status}, message={self.message}, " \
@@ -159,3 +182,6 @@ def is_billable_error_msg(msg: Optional[str]) -> bool:
     is_no_billable = (_NON_BILLABLE_ERR_MSGS_RE.search(msg) or
                       is_domain_ocupied)
     return not is_no_billable
+
+
+ACCOUNT_DISABLED_ERROR_TYPE = "http://errors.xod.scrapinghub.com/account-disabled.html"

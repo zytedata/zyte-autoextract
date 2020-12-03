@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+import json
+
 import pytest
 
-from autoextract.aio.errors import _QueryError
+from autoextract.aio.errors import _QueryError, ACCOUNT_DISABLED_ERROR_TYPE, \
+    RequestError
 
 
 def get_query_error(message):
@@ -78,3 +81,25 @@ def test_invalid_domain_occupied_query_error(message):
     exc = _QueryError.from_query_result(query_error)
     assert exc.domain_occupied is None
     assert exc.retry_seconds == 0.0
+
+
+@pytest.mark.parametrize(
+    ["error_data", "expected"],
+    [
+        [
+            {"type": ACCOUNT_DISABLED_ERROR_TYPE},
+            {"type": ACCOUNT_DISABLED_ERROR_TYPE}
+        ],
+        [["A list is not right"], {}],
+        [b"wrong Utf-8 \234", {}],
+        [None, {}],
+    ],
+)
+def test_request_error_data(error_data,
+                            expected):
+    if not isinstance(error_data, bytes):
+        error_data = json.dumps(error_data).encode("utf-8")
+    re = RequestError(request_info=None,
+                      history=None,
+                      response_content=error_data)
+    assert re.error_data() == expected

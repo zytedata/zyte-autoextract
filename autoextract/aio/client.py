@@ -10,13 +10,14 @@ from functools import partial
 
 import aiohttp
 from aiohttp import TCPConnector
+from tenacity import AsyncRetrying
 
 from autoextract.constants import API_ENDPOINT, API_TIMEOUT
 from autoextract.apikey import get_apikey
 from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
-from .retry import autoextract_retry, QueryRetryError
+from .retry import QueryRetryError, autoextract_retrying
 from .errors import RequestError, _QueryError, is_billable_error_msg
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -164,7 +165,7 @@ async def request_raw(query: Query,
                       session: Optional[aiohttp.ClientSession] = None,
                       agg_stats: AggStats = None,
                       headers: Optional[Dict[str, str]] = None,
-                      retry_wrapper=None
+                      retrying: Optional[AsyncRetrying] = None
                       ) -> Result:
     """ Send a request to Scrapinghub AutoExtract API.
 
@@ -207,36 +208,21 @@ async def request_raw(query: Query,
     won't be used in subsequent requests for fetching the URLs provided in
     the query.
 
-    The default retry policy can be overridden by providing a ``retry_wrapper``
-    function that would be used to wrap the internal request function and
-    that can react to its exceptions by retying the invocation. For example,
-    you could use the following ``retry_3_attempts`` wrapper function to
-    perform three attempts at most::
-
-        def retry_3_attempts(request_fn):
-            async def fn(*args, **kwargs):
-                for _ in range(3):
-                    try:
-                        return await request_fn()
-                    except Exception as e:
-                        exc = e
-                raise exc
-            return fn
-
-    In any case, the recommendation for customizing retrials
-    is submitting a ``retry_wrapper`` built with the class
-    :class:`autoextract.retry.RetryFactory`. The following is an example
-    that configure 3 attempts for server type errors::
+    The default retry policy can be overridden by providing a custom
+    ``retrying`` object of type :class:`tenacity.AsyncRetrying` that can
+    be built with the class :class:`autoextract.retry.RetryFactory`.
+    The following is an example that configure 3 attempts for server
+    type errors::
 
       factory = RetryFactory()
       factory.server_error_stop = stop_after_attempt(3)
-      retry_wrapper = factory.build()
+      retrying = factory.build()
 
     See :func:`request_parallel_as_completed` for a more high-level
     interface to send requests in parallel.
     """
     endpoint = API_ENDPOINT if endpoint is None else endpoint
-    retry_wrapper = retry_wrapper or autoextract_retry
+    retrying = retrying or autoextract_retrying
 
     if agg_stats is None:
         agg_stats = AggStats()  # dummy stats, to simplify code
@@ -315,7 +301,7 @@ async def request_raw(query: Query,
         #
         # In addition to handle_retries=True, QueryRetryError also depends on
         # max_query_error_retries being greater than 0.
-        request = retry_wrapper(request)
+        request = retrying.wraps(request)
 
     try:
         # Try to make a batch request

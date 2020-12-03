@@ -20,7 +20,7 @@ from tenacity import (
     RetryError,
     retry,
     before_sleep_log,
-    after_log,
+    after_log, AsyncRetrying,
 )
 from tenacity.stop import stop_never
 
@@ -144,8 +144,8 @@ class RetryFactory:
     def after(self, retry_state: RetryCallState):
         return after_log(logger, logging.DEBUG)
 
-    def build(self):
-        return retry(
+    def build(self) -> AsyncRetrying:
+        return AsyncRetrying(
             wait=self.wait,
             retry=self.retry_condition,
             stop=self.stop,
@@ -155,4 +155,4 @@ class RetryFactory:
         )
 
 
-autoextract_retry = RetryFactory().build()
+autoextract_retrying: AsyncRetrying = RetryFactory().build()

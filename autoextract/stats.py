@@ -28,15 +28,42 @@ class AggStats:
         self.n_429 = 0
         self.n_errors = 0
 
+        self.n_input_queries = 0
+        self.n_extracted_queries = 0  # Queries answered without any type of error
+        self.n_query_responses = 0
+        self.n_billable_query_responses = 0  # Some errors are also billed
+
     def __str__(self):
-        return "conn:{:0.2f}s, resp:{:0.2f}s, throttle:{:.1%}, err:{}+{}({:.1%}) | {:.1%} success".format(
+        return "conn:{:0.2f}s, resp:{:0.2f}s, throttle:{:.1%}, err:{}+{}({:.1%}) | success:{}/{}({:.1%})".format(
             self.time_connect_stats.mean(),
             self.time_total_stats.mean(),
             self.throttle_ratio(),
             self.n_errors - self.n_fatal_errors,
             self.n_fatal_errors,
             self.error_ratio(),
-            self.success_ratio(),
+            self.n_extracted_queries,
+            self.n_input_queries,
+            self.success_ratio()
+        )
+
+    def summary(self):
+        return (
+            "\n" +
+            "Summary\n" +
+            "-------\n" +
+            "Mean connection time:     {:0.2f}\n".format(self.time_connect_stats.mean()) +
+            "Mean response time:       {:0.2f}\n".format(self.time_total_stats.mean()) +
+            "Throttle ratio:           {:0.1%}\n".format(self.throttle_ratio()) +
+            "Attempts:                 {}\n".format(self.n_attempts) +
+            "Errors:                   {:0.1%}, fatal: {}, non fatal: {}\n".format(
+                self.error_ratio(),
+                self.n_fatal_errors,
+                self.n_errors - self.n_fatal_errors) +
+            "Successful URLs:          {} of {}\n".format(
+                self.n_extracted_queries, self.n_input_queries) +
+            "Success ratio:            {:0.1%}\n".format(self.success_ratio()) +
+            "Billable query responses: {} of {}\n".format(
+                self.n_billable_query_responses, self.n_query_responses)
         )
 
     @zero_on_division_error
@@ -49,7 +76,7 @@ class AggStats:
 
     @zero_on_division_error
     def success_ratio(self):
-        return self.n_results / (self.n_results + self.n_fatal_errors)
+        return self.n_extracted_queries / self.n_input_queries
 
 
 @attr.s

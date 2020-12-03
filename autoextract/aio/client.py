@@ -9,24 +9,27 @@ from typing import Optional, Dict, List, Iterator
 from functools import partial
 
 import aiohttp
+from aiohttp import TCPConnector
+from tenacity import AsyncRetrying
 
 from autoextract.constants import API_ENDPOINT, API_TIMEOUT
 from autoextract.apikey import get_apikey
 from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
-from .retry import autoextract_retry, QueryRetryError
-from .errors import RequestError, _QueryError
-
+from .retry import QueryRetryError, autoextract_retrying
+from .errors import RequestError, _QueryError, is_billable_error_msg
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
                                         sock_read=API_TIMEOUT + 30,
                                         sock_connect=10)
 
 
-def create_session(**kwargs) -> aiohttp.ClientSession:
+def create_session(connection_pool_size=100, **kwargs) -> aiohttp.ClientSession:
     """ Create a session with parameters suited for AutoExtract """
     kwargs.setdefault('timeout', AIO_API_TIMEOUT)
+    if "connector" not in kwargs:
+        kwargs["connector"] = TCPConnector(limit=connection_pool_size)
     return aiohttp.ClientSession(**kwargs)
 
 
@@ -51,6 +54,9 @@ class RequestProcessor:
         self.pending_queries = query_as_dict_list(query)
         self._max_retries = max_retries
         self._complete_queries: List[Dict] = list()
+        self._n_extracted_queries: int = 0
+        self._n_query_responses: int = 0
+        self._n_billable_query_responses: int = 0
 
     def _reset(self):
         """Clear temporary variables between retries"""
@@ -84,6 +90,18 @@ class RequestProcessor:
         """
         return self._complete_queries + self._retriable_queries
 
+    def extracted_queries_count(self):
+        """Number of queries extracted without any error"""
+        return self._n_extracted_queries
+
+    def query_responses_count(self):
+        """Number of query responses received"""
+        return self._n_query_responses
+
+    def billable_query_responses_count(self):
+        """Number of billable query responses (some errors are billable)"""
+        return self._n_billable_query_responses
+
     def process_results(self, query_results):
         """Process query results.
 
@@ -110,6 +128,13 @@ class RequestProcessor:
         """
         self._reset()
         for query_result in query_results:
+            self._n_query_responses += 1
+            if "error" not in query_result:
+                self._n_extracted_queries += 1
+                self._n_billable_query_responses += 1
+            else:
+                if is_billable_error_msg(query_result["error"]):
+                    self._n_billable_query_responses += 1
             if self._max_retries and "error" in query_result:
                 query_exception = _QueryError.from_query_result(
                     query_result, self._max_retries)
@@ -139,6 +164,8 @@ async def request_raw(query: Query,
                       max_query_error_retries: int = 0,
                       session: Optional[aiohttp.ClientSession] = None,
                       agg_stats: AggStats = None,
+                      headers: Optional[Dict[str, str]] = None,
+                      retrying: Optional[AsyncRetrying] = None
                       ) -> Result:
     """ Send a request to Scrapinghub AutoExtract API.
 
@@ -150,7 +177,8 @@ async def request_raw(query: Query,
     taken from SCRAPINGHUB_AUTOEXTRACT_KEY environment variable.
 
     ``session`` is an optional aiohttp.ClientSession object;
-    use it to enable HTTP Keep-Alive.
+    use it to enable HTTP Keep-Alive and to control connection
+    pool size.
 
     This function retries http 429 errors and network errors by default;
     this allows to handle server-side throttling properly.
@@ -175,10 +203,26 @@ async def request_raw(query: Query,
     ``agg_stats`` argument allows to keep track of various stats; pass an
     ``AggStats`` instance, and it'll be updated.
 
+    Additional ``headers`` for the API request can be provided. This headers
+    are included in the request done against the API endpoint: they
+    won't be used in subsequent requests for fetching the URLs provided in
+    the query.
+
+    The default retry policy can be overridden by providing a custom
+    ``retrying`` object of type :class:`tenacity.AsyncRetrying` that can
+    be built with the class :class:`autoextract.retry.RetryFactory`.
+    The following is an example that configure 3 attempts for server
+    type errors::
+
+      factory = RetryFactory()
+      factory.server_error_stop = stop_after_attempt(3)
+      retrying = factory.build()
+
     See :func:`request_parallel_as_completed` for a more high-level
     interface to send requests in parallel.
     """
     endpoint = API_ENDPOINT if endpoint is None else endpoint
+    retrying = retrying or autoextract_retrying
 
     if agg_stats is None:
         agg_stats = AggStats()  # dummy stats, to simplify code
@@ -199,10 +243,11 @@ async def request_raw(query: Query,
 
     post = _post_func(session)
     auth = aiohttp.BasicAuth(get_apikey(api_key))
-    headers = {'User-Agent': user_agent(aiohttp)}
+    headers = {'User-Agent': user_agent(aiohttp), **(headers or {})}
 
     response_stats = []
     start_global = time.perf_counter()
+    agg_stats.n_input_queries += len(query)
 
     async def request():
         stats = ResponseStats.create(start_global)
@@ -256,7 +301,7 @@ async def request_raw(query: Query,
         #
         # In addition to handle_retries=True, QueryRetryError also depends on
         # max_query_error_retries being greater than 0.
-        request = autoextract_retry(request)
+        request = retrying.wraps(request)
 
     try:
         # Try to make a batch request
@@ -269,10 +314,14 @@ async def request_raw(query: Query,
     except Exception:
         agg_stats.n_fatal_errors += 1
         raise
+    finally:
+        agg_stats.n_extracted_queries += request_processor.extracted_queries_count()
+        agg_stats.n_billable_query_responses += request_processor.billable_query_responses_count()
+        agg_stats.n_query_responses += request_processor.query_responses_count()
 
     result = Result(result)
     result.response_stats = response_stats
-    if handle_retries:
+    if handle_retries and hasattr(request, 'retry'):
         result.retry_stats = request.retry.statistics  # type: ignore
 
     agg_stats.n_results += 1

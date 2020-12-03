@@ -26,7 +26,7 @@ logger = logging.getLogger('autoextract')
 async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
               api_key=None, api_endpoint=None, max_query_error_retries=0):
     agg_stats = AggStats()
-    async with create_session() as session:
+    async with create_session(connection_pool_size=n_conn) as session:
         result_iter = request_parallel_as_completed(
             query=query,
             n_conn=n_conn,
@@ -57,6 +57,7 @@ async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
                     pbar.set_postfix_str(str(agg_stats))
         finally:
             pbar.close()
+    logger.debug(agg_stats.summary())
 
 
 def read_input(input_fp, intype, page_type):
@@ -89,7 +90,7 @@ if __name__ == '__main__':
                    type=argparse.FileType("r", encoding='utf8'),
                    help="Input file with urls, url per line by default. The "
                         "Format can be changed using `--intype` argument.")
-    p.add_argument("--intype", default="txt", choices=["txt", "jl"], 
+    p.add_argument("--intype", default="txt", choices=["txt", "jl"],
                    help='Type of the input file (default: %(default)s). '
                         'Allowed values are "txt": input should be one '
                         'URL per line, and "jl": input should be a jsonlines '

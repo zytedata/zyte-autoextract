@@ -106,15 +106,6 @@ class RetryFactory:
     server_error_stop = stop_after_delay(15 * 60)
     retryable_query_error_stop = stop_after_delay(15 * 60)
 
-    def __init__(self, **kwargs):
-        mutable_attributes = {attrib for attrib in dir(self)
-                              if not attrib.startswith("_")}
-        for k, v in kwargs:
-            if not k in mutable_attributes:
-                raise TypeError(f"Attribute {k} is invalid. Any of "
-                                f"{mutable_attributes} was expected")
-            setattr(self, k, v)
-
     def wait(self, retry_state: RetryCallState) -> float:
         exc = retry_state.outcome.exception()
         if _is_throttling_error(exc):

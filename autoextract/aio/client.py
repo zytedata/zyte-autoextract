@@ -207,9 +207,30 @@ async def request_raw(query: Query,
     won't be used in subsequent requests for fetching the URLs provided in
     the query.
 
-    Default retry policy can be customized by providing a
-    ``retry_wrapper`` that can be built with a customized
-    :class:`autoextract.retry.RetryFactory`
+    The default retry policy can be overridden by providing a ``retry_wrapper``
+    function that would be used to wrap the internal request function and
+    that can react to its exceptions by retying the invocation. For example,
+    you could use the following ``retry_3_attempts`` wrapper function to
+    perform three attempts at most::
+
+        def retry_3_attempts(request_fn):
+            async def fn(*args, **kwargs):
+                for _ in range(3):
+                    try:
+                        return await request_fn()
+                    except Exception as e:
+                        exc = e
+                raise exc
+            return fn
+
+    In any case, the recommendation for customizing retrials
+    is submitting a ``retry_wrapper`` built with the class
+    :class:`autoextract.retry.RetryFactory`. The following is an example
+    that configure 3 attempts for server type errors::
+
+      factory = RetryFactory()
+      factory.server_error_stop = stop_after_attempt(3)
+      retry_wrapper = factory.build()
 
     See :func:`request_parallel_as_completed` for a more high-level
     interface to send requests in parallel.
@@ -314,7 +335,7 @@ async def request_raw(query: Query,
 
     result = Result(result)
     result.response_stats = response_stats
-    if handle_retries:
+    if handle_retries and hasattr(request, 'retry'):
         result.retry_stats = request.retry.statistics  # type: ignore
 
     agg_stats.n_results += 1

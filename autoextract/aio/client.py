@@ -202,7 +202,10 @@ async def request_raw(query: Query,
     ``agg_stats`` argument allows to keep track of various stats; pass an
     ``AggStats`` instance, and it'll be updated.
 
-    Additional ``headers`` for the requests can be provided.
+    Additional ``headers`` for the API request can be provided. This headers
+    are included in the request done against the API endpoint: they
+    won't be used in subsequent requests for fetching the URLs provided in
+    the query.
 
     Default retry policy can be customized by providing a
     ``retry_wrapper`` that can be built with a customized

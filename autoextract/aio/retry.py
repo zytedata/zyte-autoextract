@@ -76,10 +76,10 @@ class RetryFactory:
     Build custom retry configuration
     """
     retry_condition = (
-            retry_if_exception(_is_throttling_error) |
-            retry_if_exception(_is_network_error) |
-            retry_if_exception(_is_server_error) |
-            retry_if_exception(_is_retriable_query_error)
+        retry_if_exception(_is_throttling_error) |
+        retry_if_exception(_is_network_error) |
+        retry_if_exception(_is_server_error) |
+        retry_if_exception(_is_retriable_query_error)
     )
     # throttling
     throttling_wait = wait_chain(

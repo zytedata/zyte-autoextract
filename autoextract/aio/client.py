@@ -247,7 +247,6 @@ async def request_raw(query: Query,
 
     response_stats = []
     start_global = time.perf_counter()
-    agg_stats.n_input_queries += len(query)
 
     async def request():
         stats = ResponseStats.create(start_global)
@@ -315,6 +314,7 @@ async def request_raw(query: Query,
         agg_stats.n_fatal_errors += 1
         raise
     finally:
+        agg_stats.n_input_queries += len(query)
         agg_stats.n_extracted_queries += request_processor.extracted_queries_count()
         agg_stats.n_billable_query_responses += request_processor.billable_query_responses_count()
         agg_stats.n_query_responses += request_processor.query_responses_count()

@@ -17,7 +17,7 @@ from autoextract.apikey import get_apikey
 from autoextract.utils import chunks, user_agent
 from autoextract.request import Query, query_as_dict_list
 from autoextract.stats import ResponseStats, AggStats
-from .retry import QueryRetryError, autoextract_retrying
+from .retry import autoextract_retrying
 from .errors import RequestError, _QueryError, is_billable_error_msg
 
 AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
@@ -108,9 +108,9 @@ class RequestProcessor:
         Return successful queries and also failed ones.
 
         If `self._max_retries` is greater than 0,
-        this method might raise a `_QueryError` exception.
+        this method might raise a `QueryError` exception.
 
-        If multiple `_QueryError` exceptions are parsed,
+        If multiple `QueryError` exceptions are parsed,
         the one with the longest timeout is raised.
 
         Successful requests are saved in `self._complete_queries`
@@ -185,15 +185,9 @@ async def request_raw(query: Query,
     Use ``handle_retries=False`` if you want to disable this behavior
     (e.g. to implement it yourself).
 
-    When handle_retries is True, this function can raise
-
-    1) autoextract.errors.RequestError,
-       if there is a Request-level error returned by the API
-       which is not a throttling response
-       (e.g. it can be raised for incorrect request).
-    2) tenacity.RetryError,
-       if a network-related error persists for a long time,
-       over the allowed time period.
+    Among others, this function can raise autoextract.errors.RequestError,
+    if there is a Request-level error returned by the API after all attempts
+    were exhausted.
 
     Throttling errors are retried indefinitely when handle_retries is True.
 
@@ -292,20 +286,12 @@ async def request_raw(query: Query,
             response_stats.append(stats)
 
     if handle_retries:
-        # If handle_retries=True, the request method could raise
-        # RetryError and QueryRetryError exceptions.
-        #
-        # These exceptions are raised when Tenacity is not able to
-        # successfully retry failing requests.
-        #
-        # In addition to handle_retries=True, QueryRetryError also depends on
-        # max_query_error_retries being greater than 0.
         request = retrying.wraps(request)
 
     try:
         # Try to make a batch request
         result = await request()
-    except QueryRetryError:
+    except _QueryError:
         # If Tenacity fails to retry a _QueryError because the max number of
         # retries or a timeout was reached, get latest results combining
         # error and successes and consider it as the final result.

@@ -17,14 +17,12 @@ from tenacity import (
     stop_after_delay,
     retry_if_exception,
     RetryCallState,
-    RetryError,
-    retry,
     before_sleep_log,
     after_log, AsyncRetrying,
 )
 from tenacity.stop import stop_never
 
-from .errors import RequestError, _QueryError, QueryRetryError
+from .errors import RequestError, _QueryError
 
 
 logger = logging.getLogger(__name__)
@@ -61,14 +59,6 @@ def _is_server_error(exc: Exception) -> bool:
 
 def _is_retriable_query_error(exc: Exception) -> bool:
     return isinstance(exc, _QueryError) and exc.retriable and exc.max_retries > 0
-
-
-def _exception_factory(fut):
-    exc = fut.exception()
-    if isinstance(exc, _QueryError):
-        return QueryRetryError(fut)
-
-    return RetryError(fut)
 
 
 class RetryFactory:
@@ -144,6 +134,9 @@ class RetryFactory:
     def after(self, retry_state: RetryCallState):
         return after_log(logger, logging.DEBUG)
 
+    def reraise(self) -> bool:
+        return True
+
     def build(self) -> AsyncRetrying:
         return AsyncRetrying(
             wait=self.wait,
@@ -151,7 +144,7 @@ class RetryFactory:
             stop=self.stop,
             before_sleep=self.before_sleep,
             after=self.after,
-            retry_error_cls=_exception_factory,
+            reraise=self.reraise()
         )
 
 

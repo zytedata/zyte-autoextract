@@ -6,7 +6,6 @@ from json import JSONDecodeError
 from typing import Optional
 
 from aiohttp import ClientResponseError
-from tenacity import RetryError
 
 logger = logging.getLogger(__name__)
 
@@ -140,13 +139,6 @@ class _QueryError(Exception):
         if self.domain_occupied:
             return self.domain_occupied.retry_seconds
         return 0.0
-
-
-class QueryRetryError(RetryError):
-    """This exception is raised when Tenacity reaches the max retry count or
-    timeouts when retrying Query-level errors (see :class:``._QueryError``).
-    """
-    pass
 
 
 # Based on https://doc.scrapinghub.com/autoextract.html#reference

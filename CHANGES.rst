@@ -1,12 +1,11 @@
 Changes
 =======
 
-0.6.0 (TBA)
------------
+0.6.0 (2020-12-29)
+------------------
 
-* CLI changes:
-  * error display in the progress bar is changed
-  * summary is printed after the execution
+* CLI changes: error display in the progress bar is changed;
+  summary is printed after the executions
 * more errors are retried when retrying is enabled, which allows for a higher
   success rate
 * fixed tcp connection pooling

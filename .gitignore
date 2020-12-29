@@ -19,3 +19,4 @@
 .ipynb_checkpoints/
 htmlcov/
 notebooks/
+coverage.xml

@@ -10,8 +10,8 @@ scrapinghub-autoextract
    :target: https://pypi.python.org/pypi/scrapinghub-autoextract
    :alt: Supported Python Versions
 
-.. image:: https://travis-ci.org/scrapinghub/scrapinghub-autoextract.svg?branch=master
-   :target: https://travis-ci.org/scrapinghub/scrapinghub-autoextract
+.. image:: https://github.com/scrapinghub/scrapinghub-autoextract/workflows/tox/badge.svg
+   :target: https://github.com/scrapinghub/scrapinghub-autoextract/actions
    :alt: Build Status
 
 .. image:: https://codecov.io/github/scrapinghub/scrapinghub-autoextract/coverage.svg?branch=master

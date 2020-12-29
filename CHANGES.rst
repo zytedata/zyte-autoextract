@@ -1,6 +1,24 @@
 Changes
 =======
 
+0.6.0 (TBA)
+-----------
+
+* CLI changes:
+  * error display in the progress bar is changed
+  * summary is printed after the execution
+* more errors are retried when retrying is enabled, which allows for a higher
+  success rate
+* fixed tcp connection pooling
+* ``autoextract.aio.request_raw`` function allows to pass custom headers
+  to the API (not to remote websites)
+* ``autoextract.aio.request_raw`` now allows to customize the retry
+  behavior, via ``retrying`` argument
+* ``tenacity.RetryError`` is no longer raised by the library; concrete errors
+  are raised instead
+* Python 3.9 support
+* CI is moved from Travis to Github Actions
+
 0.5.2 (2020-11-27)
 ------------------
 

@@ -123,7 +123,7 @@ class RetryFactory:
         elif _is_retriable_query_error(exc):
             return (
                 self.retryable_query_error_stop |
-                stop_after_attempt(exc.max_retries)
+                stop_after_attempt(exc.max_retries + 1)
             )(retry_state)
         else:
             raise RuntimeError("Invalid retry state exception: %s" % exc)

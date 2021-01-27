@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.6.1 (2021-01-27)
+------------------
+
+* fixed ``max_retries`` behaviour. Total attempts must be max_retries + 1
+
 0.6.0 (2020-12-29)
 ------------------
 

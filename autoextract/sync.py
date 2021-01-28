@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Synchronous Scrapinghub AutoExtract API client.
+Synchronous Zyte Automatic Extraction API client.
 """
 
 from typing import Optional, Dict, Any, List
@@ -18,10 +18,9 @@ def request_raw(query: Query,
                 api_key: Optional[str] = None,
                 endpoint: str = API_ENDPOINT,
                 ) -> List[Dict[str, Any]]:
-    """ Send a request to Scrapinghub AutoExtract API.
+    """ Send a request to the Zyte Automatic Extraction API.
     Query is a list of Request instances or of dicts, as described
-    in the API docs (see
-    https://doc.scrapinghub.com/autoextract.html).
+    in the API docs (see https://zyte.com/docs/autoextract.html).
     """
     auth = (get_apikey(api_key), '')
     timeout = API_TIMEOUT + 60

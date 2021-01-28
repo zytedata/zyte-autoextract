@@ -1,25 +1,24 @@
 =======================
-scrapinghub-autoextract
-=======================
+zyte-autoextract
+================
 
-.. image:: https://img.shields.io/pypi/v/scrapinghub-autoextract.svg
-   :target: https://pypi.python.org/pypi/scrapinghub-autoextract
+.. image:: https://img.shields.io/pypi/v/zyte-autoextract.svg
+   :target: https://pypi.python.org/pypi/zyte-autoextract
    :alt: PyPI Version
 
-.. image:: https://img.shields.io/pypi/pyversions/scrapinghub-autoextract.svg
-   :target: https://pypi.python.org/pypi/scrapinghub-autoextract
+.. image:: https://img.shields.io/pypi/pyversions/zyte-autoextract.svg
+   :target: https://pypi.python.org/pypi/zyte-autoextract
    :alt: Supported Python Versions
 
-.. image:: https://github.com/scrapinghub/scrapinghub-autoextract/workflows/tox/badge.svg
-   :target: https://github.com/scrapinghub/scrapinghub-autoextract/actions
+.. image:: https://github.com/Zytegroup/zyte-autoextract/workflows/tox/badge.svg
+   :target: https://github.com/Zytegroup/zyte-autoextract/actions
    :alt: Build Status
 
-.. image:: https://codecov.io/github/scrapinghub/scrapinghub-autoextract/coverage.svg?branch=master
-   :target: https://codecov.io/gh/scrapinghub/scrapinghub-autoextract
+.. image:: https://codecov.io/github/Zytegroup/zyte-autoextract/coverage.svg?branch=master
+   :target: https://codecov.io/gh/Zytegroup/zyte-autoextract
    :alt: Coverage report
 
-
-Python client libraries for `Scrapinghub AutoExtract API`_.
+Python client libraries for `Zyte Automatic Extraction API`_.
 It allows to extract product, article, job posting, etc.
 information from any website - whatever the API supports.
 
@@ -28,7 +27,7 @@ are provided by this package.
 
 License is BSD 3-clause.
 
-.. _Scrapinghub AutoExtract API: https://scrapinghub.com/autoextract
+.. _Zyte Automatic Extraction API: https://www.zyte.com/data-extraction/
 
 
 Installation
@@ -36,16 +35,16 @@ Installation
 
 ::
 
-    pip install scrapinghub-autoextract
+    pip install zyte-autoextract
 
-scrapinghub-autoextract requires Python 3.6+ for CLI tool and for
+zyte-autoextract requires Python 3.6+ for CLI tool and for
 the asyncio API; basic, synchronous API works with Python 3.5.
 
 Usage
 =====
 
 First, make sure you have an API key. To avoid passing it in ``api_key``
-argument with every call, you can set ``SCRAPINGHUB_AUTOEXTRACT_KEY``
+argument with every call, you can set ``ZYTE_AUTOEXTRACT_KEY``
 environment variable with the key.
 
 Command-line interface
@@ -53,8 +52,8 @@ Command-line interface
 
 The most basic way to use the client is from a command line.
 First, create a file with urls, an URL per line (e.g. ``urls.txt``).
-Second, set ``SCRAPINGHUB_AUTOEXTRACT_KEY`` env variable with your
-AutoExtract API key (you can also pass API key as ``--api-key`` script
+Second, set ``ZYTE_AUTOEXTRACT_KEY`` env variable with your
+Zyte Automatic Extraction API key (you can also pass API key as ``--api-key`` script
 argument).
 
 Then run a script, to get the results::
@@ -69,7 +68,7 @@ Then run a script, to get the results::
 
 If you need more flexibility, you can customize the requests by creating
 a JsonLines file with queries: a JSON object per line. You can pass any
-AutoExtract options there. Example - store it in ``queries.jl`` file::
+Zyte Automatic Extraction options there. Example - store it in ``queries.jl`` file::
 
     {"url": "http://example.com", "meta": "id0", "articleBodyRaw": false}
     {"url": "http://example.com/foo", "meta": "id1", "articleBodyRaw": false}
@@ -81,7 +80,7 @@ dicts. API docs mention batch requests and their limitation
 file (i.e. it may have millions of rows), as the command-line script does
 its own batching.
 
-.. _API docs: https://doc.scrapinghub.com/autoextract.html
+.. _API docs: https://zyte.com/docs/autoextract.html
 
 Note that in the example ``pageType`` argument is omitted; ``pageType``
 values are filled automatically from ``--page-type`` command line argument
@@ -114,7 +113,7 @@ throttling errors. They are handled by CLI automatically, but they make
 extraction less efficient; please tune the concurrency options to
 not hit the throttling errors (HTTP 429) often.
 
-You may be also limited by the website speed. AutoExtract tries not to hit
+You may be also limited by the website speed. Zyte Automatic Extraction tries not to hit
 any individual website too hard, but it could be better to limit this on
 a client side as well. If you're extracting data from a single website,
 it could make sense to decrease the amount of parallel requests; it can ensure
@@ -161,8 +160,8 @@ On the other hand,
 it makes no sense to retry queries that return a 404 Not Found error
 because the response is not supposed to change if retried.
 
-.. _Request-level errors: https://doc.scrapinghub.com/autoextract.html#request-level
-.. _Query-level errors: https://doc.scrapinghub.com/autoextract.html#query-level
+.. _Request-level errors: https://zyte.com/docs/autoextract.html#request-level
+.. _Query-level errors: https://zyte.com/docs/autoextract.html#query-level
 
 Retries
 ~~~~~~~
@@ -188,7 +187,7 @@ including both queries with success and the ones with errors.
 Synchronous API
 ---------------
 
-Synchronous API provides an easy way to try AutoExtract.
+Synchronous API provides an easy way to try Zyte Automatic Extraction.
 For production usage asyncio API is strongly recommended. Currently the
 synchronous API doesn't handle throttling errors, and has other limitations;
 it is most suited for quickly checking extraction results for a few URLs.
@@ -268,11 +267,11 @@ as an usage example.
 Request helpers
 ---------------
 
-To query AutoExtract you need to create a dict with request parameters, e.g.::
+To query Zyte Automatic Extraction you need to create a dict with request parameters, e.g.::
 
     {'url': 'http://example.com.foo', 'pageType': 'article'}
 
-To simplify the library usage and avoid typos, scrapinghub-autoextract
+To simplify the library usage and avoid typos, zyte-autoextract
 provides helper classes for constructing these dicts::
 
 * autoextract.Request
@@ -325,8 +324,8 @@ This will generate a query that looks like this::
 Contributing
 ============
 
-* Source code: https://github.com/scrapinghub/scrapinghub-autoextract
-* Issue tracker: https://github.com/scrapinghub/scrapinghub-autoextract/issues
+* Source code: https://github.com/Zytegroup/zyte-autoextract
+* Issue tracker: https://github.com/Zytegroup/zyte-autoextract/issues
 
 Use tox_ to run tests with different Python versions::
 

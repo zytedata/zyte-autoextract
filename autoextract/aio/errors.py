@@ -47,7 +47,7 @@ class RequestError(ClientResponseError):
     """ Exception which is raised when Request-level error is returned.
     In contrast with ClientResponseError, it allows to inspect response
     content.
-    https://doc.scrapinghub.com/autoextract.html#request-level
+    https://zyte.com/docs/autoextract.html#request-level
     """
     def __init__(self, *args, **kwargs):
         self.response_content = kwargs.pop("response_content")
@@ -110,7 +110,7 @@ def is_retriable_error_msg(msg: Optional[str]) -> bool:
 
 class _QueryError(Exception):
     """ Exception which is raised when a Query-level error is returned.
-    https://doc.scrapinghub.com/autoextract.html#query-level
+    https://zyte.com/docs/autoextract.html#query-level
     """
 
     def __init__(self, query: dict, message: str, max_retries: int = 0):
@@ -141,7 +141,7 @@ class _QueryError(Exception):
         return 0.0
 
 
-# Based on https://doc.scrapinghub.com/autoextract.html#reference
+# Based on https://zyte.com/docs/autoextract.html#reference
 _NON_BILLABLE_ERR_MSGS = [
     "malformed url",
     "URL cannot be longer than",
@@ -158,7 +158,7 @@ _NON_BILLABLE_ERR_MSGS_RE = re.compile(
 def is_billable_error_msg(msg: Optional[str]) -> bool:
     """
     Return true if the error message is billable. Based on
-    https://doc.scrapinghub.com/autoextract.html#reference
+    https://zyte.com/docs/autoextract.html#reference
 
     >>> is_billable_error_msg(None)
     True
@@ -178,4 +178,4 @@ def is_billable_error_msg(msg: Optional[str]) -> bool:
     return not is_no_billable
 
 
-ACCOUNT_DISABLED_ERROR_TYPE = "http://errors.xod.scrapinghub.com/account-disabled.html"
+ACCOUNT_DISABLED_ERROR_TYPE = "http://errors.xod.zyte.com/account-disabled.html"

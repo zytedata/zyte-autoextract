@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-aiohttp Scrapinghub AutoExtract API client.
+aiohttp Zyte Automatic Extraction API client.
 """
 import asyncio
 import time
@@ -26,7 +26,7 @@ AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
 
 
 def create_session(connection_pool_size=100, **kwargs) -> aiohttp.ClientSession:
-    """ Create a session with parameters suited for AutoExtract """
+    """ Create a session with parameters suited for Zyte Automatic Extraction """
     kwargs.setdefault('timeout', AIO_API_TIMEOUT)
     if "connector" not in kwargs:
         kwargs["connector"] = TCPConnector(limit=connection_pool_size)
@@ -167,14 +167,14 @@ async def request_raw(query: Query,
                       headers: Optional[Dict[str, str]] = None,
                       retrying: Optional[AsyncRetrying] = None
                       ) -> Result:
-    """ Send a request to Scrapinghub AutoExtract API.
+    """ Send a request to Zyte Automatic Extraction API.
 
     ``query`` is a list of dicts or Request objects, as
     described in the API docs
-    (see https://doc.scrapinghub.com/autoextract.html).
+    (see https://zyte.com/docs/autoextract.html).
 
-    ``api_key`` is your AutoExtract API key. If not set, it is
-    taken from SCRAPINGHUB_AUTOEXTRACT_KEY environment variable.
+    ``api_key`` is your Zyte Automatic Extraction API key. If not set, it is
+    taken from ZYTE_AUTOEXTRACT_KEY environment variable.
 
     ``session`` is an optional aiohttp.ClientSession object;
     use it to enable HTTP Keep-Alive and to control connection
@@ -324,14 +324,14 @@ def request_parallel_as_completed(query: Query,
                                   agg_stats: AggStats = None,
                                   max_query_error_retries=0,
                                   ) -> Iterator[asyncio.Future]:
-    """ Send multiple requests to AutoExtract API in parallel.
+    """ Send multiple requests to Zyte Automatic Extraction API in parallel.
     Return an `asyncio.as_completed` iterator.
 
     ``query`` is a list of requests to process (autoextract.Request
     instances or dicts).
 
-    ``api_key`` is your AutoExtract API key. If not set, it is
-    taken from SCRAPINGHUB_AUTOEXTRACT_KEY environment variable.
+    ``api_key`` is your Zyte Automatic Extraction API key. If not set, it is
+    taken from ZYTE_AUTOEXTRACT_KEY environment variable.
 
     ``n_conn`` is a number of parallel connections to a server.
     ``batch_size`` is an amount of queries sent in a batch in each connection.

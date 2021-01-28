@@ -13,14 +13,14 @@ def get_version():
 
 
 setup(
-    name='scrapinghub-autoextract',
+    name='zyte-autoextract',
     version=get_version(),
-    description='Python interface to Scrapinghub Automatic Extraction API',
+    description='Python interface to Zyte Automatic Extraction API',
     long_description=open('README.rst').read() + "\n\n" + open('CHANGES.rst').read(),
     long_description_content_type='text/x-rst',
     author='Mikhail Korobov',
     author_email='kmike84@gmail.com',
-    url='https://github.com/scrapinghub/scrapinghub-autoextract',
+    url='https://github.com/Zytegroup/zyte-autoextract',
     packages=find_packages(exclude=['tests', 'examples']),
     install_requires=[
         'requests',

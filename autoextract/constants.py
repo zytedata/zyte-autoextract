@@ -4,7 +4,7 @@
 ENV_VARIABLE = 'ZYTE_AUTOEXTRACT_KEY'
 
 # Endpoint
-API_ENDPOINT = 'https://autoextract.zyte.com/v1/extract'
+API_ENDPOINT = 'https://autoextract.scrapinghub.com/v1/extract'
 
 # Default timeout that server uses. Client timeouts should be larger than that.
 API_TIMEOUT = 600

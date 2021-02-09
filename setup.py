@@ -20,7 +20,7 @@ setup(
     long_description_content_type='text/x-rst',
     author='Mikhail Korobov',
     author_email='kmike84@gmail.com',
-    url='https://github.com/Zytegroup/zyte-autoextract',
+    url='https://github.com/zytedata/zyte-autoextract',
     packages=find_packages(exclude=['tests', 'examples']),
     install_requires=[
         'requests',

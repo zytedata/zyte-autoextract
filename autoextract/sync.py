@@ -20,7 +20,7 @@ def request_raw(query: Query,
                 ) -> List[Dict[str, Any]]:
     """ Send a request to the Zyte Automatic Extraction API.
     Query is a list of Request instances or of dicts, as described
-    in the API docs (see https://zyte.com/docs/autoextract.html).
+    in the API docs (see https://docs.zyte.com/automatic-extraction.html).
     """
     auth = (get_apikey(api_key), '')
     timeout = API_TIMEOUT + 60

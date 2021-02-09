@@ -94,8 +94,8 @@ if __name__ == '__main__':
                    help='Type of the input file (default: %(default)s). '
                         'Allowed values are "txt": input should be one '
                         'URL per line, and "jl": input should be a jsonlines '
-                        'file, with {"url": "...", "meta": ...,} dicts;'
-                        'see https://zyte.com/docs/autoextract.html#requests'
+                        'file, with {"url": "...", "meta": ...,} dicts; see '
+                        'https://docs.zyte.com/automatic-extraction.html#requests '
                         'for the data format description.')
     p.add_argument("--output", "-o",
                    default=sys.stdout,

@@ -1,4 +1,4 @@
-=======================
+================
 zyte-autoextract
 ================
 
@@ -10,12 +10,12 @@ zyte-autoextract
    :target: https://pypi.python.org/pypi/zyte-autoextract
    :alt: Supported Python Versions
 
-.. image:: https://github.com/Zytegroup/zyte-autoextract/workflows/tox/badge.svg
-   :target: https://github.com/Zytegroup/zyte-autoextract/actions
+.. image:: https://github.com/zytedata/zyte-autoextract/workflows/tox/badge.svg
+   :target: https://github.com/zytedata/zyte-autoextract/actions
    :alt: Build Status
 
-.. image:: https://codecov.io/github/Zytegroup/zyte-autoextract/coverage.svg?branch=master
-   :target: https://codecov.io/gh/Zytegroup/zyte-autoextract
+.. image:: https://codecov.io/github/zytedata/zyte-autoextract/coverage.svg?branch=master
+   :target: https://codecov.io/gh/zytedata/zyte-autoextract
    :alt: Coverage report
 
 Python client libraries for `Zyte Automatic Extraction API`_.
@@ -80,7 +80,7 @@ dicts. API docs mention batch requests and their limitation
 file (i.e. it may have millions of rows), as the command-line script does
 its own batching.
 
-.. _API docs: https://zyte.com/docs/autoextract.html
+.. _API docs: https://docs.zyte.com/automatic-extraction.html
 
 Note that in the example ``pageType`` argument is omitted; ``pageType``
 values are filled automatically from ``--page-type`` command line argument
@@ -160,8 +160,8 @@ On the other hand,
 it makes no sense to retry queries that return a 404 Not Found error
 because the response is not supposed to change if retried.
 
-.. _Request-level errors: https://zyte.com/docs/autoextract.html#request-level
-.. _Query-level errors: https://zyte.com/docs/autoextract.html#query-level
+.. _Request-level errors: https://docs.zyte.com/automatic-extraction.html#request-level
+.. _Query-level errors: https://docs.zyte.com/automatic-extraction.html#query-level
 
 Retries
 ~~~~~~~
@@ -324,8 +324,8 @@ This will generate a query that looks like this::
 Contributing
 ============
 
-* Source code: https://github.com/Zytegroup/zyte-autoextract
-* Issue tracker: https://github.com/Zytegroup/zyte-autoextract/issues
+* Source code: https://github.com/zytedata/zyte-autoextract
+* Issue tracker: https://github.com/zytedata/zyte-autoextract/issues
 
 Use tox_ to run tests with different Python versions::
 

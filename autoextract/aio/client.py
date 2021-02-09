@@ -171,7 +171,7 @@ async def request_raw(query: Query,
 
     ``query`` is a list of dicts or Request objects, as
     described in the API docs
-    (see https://zyte.com/docs/autoextract.html).
+    (see https://docs.zyte.com/automatic-extraction.html).
 
     ``api_key`` is your Zyte Automatic Extraction API key. If not set, it is
     taken from ZYTE_AUTOEXTRACT_KEY environment variable.

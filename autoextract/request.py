@@ -10,7 +10,7 @@ QueryDict = Dict[str, Any]
 class Request:
     """
     A single request data for Zyte Automatic Extraction.
-    See https://zyte.com/docs/autoextract.html#requests
+    See https://docs.zyte.com/automatic-extraction.html#requests
 
     Note that `articleBodyRaw` is set to false by default here; API itself
     defaults to true. Set `articleBodyRaw=None` to remove `articleBodyRaw`

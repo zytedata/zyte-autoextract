@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-AutoExtract retrying logic.
+Zyte Automatic Extraction retrying logic.
 
 TODO: add sync support; only autoextract.aio is supported at the moment.
 """

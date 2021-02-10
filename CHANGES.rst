@@ -1,6 +1,20 @@
 Changes
 =======
 
+0.7.0 (2021-02-??)
+------------------
+
+Update to accommodate upstream rebranding changes, as Scrapinghub has become
+Zyte.
+
+This update involves some major changes:
+
+-   The repository name and the package name in the Python Package Index have
+    changed from ``scrapinghub-autoextract`` to ``zyte-autoextract``.
+
+-   The ``SCRAPINGHUB_AUTOEXTRACT_KEY`` environment variable has been renamed
+    to ``ZYTE_AUTOEXTRACT_KEY``.
+
 0.6.1 (2021-01-27)
 ------------------
 

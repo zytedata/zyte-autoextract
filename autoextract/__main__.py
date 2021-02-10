@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Basic command-line interface for AutoExtract. """
+""" Basic command-line interface for Zyte Automatic Extraction. """
 import argparse
 import json
 import sys
@@ -79,11 +79,11 @@ def read_input(input_fp, intype, page_type):
 
 
 if __name__ == '__main__':
-    """ Process urls from input file through AutoExtract """
+    """ Process urls from input file through Zyte Automatic Extraction """
     p = argparse.ArgumentParser(
         prog='python -m autoextract',
         description="""
-        Process input URLs from a file using AutoExtract.
+        Process input URLs from a file using Zyte Automatic Extraction.
         """,
     )
     p.add_argument("input",
@@ -94,8 +94,8 @@ if __name__ == '__main__':
                    help='Type of the input file (default: %(default)s). '
                         'Allowed values are "txt": input should be one '
                         'URL per line, and "jl": input should be a jsonlines '
-                        'file, with {"url": "...", "meta": ...,} dicts;'
-                        'see https://doc.scrapinghub.com/autoextract.html#requests'
+                        'file, with {"url": "...", "meta": ...,} dicts; see '
+                        'https://docs.zyte.com/automatic-extraction.html#requests '
                         'for the data format description.')
     p.add_argument("--output", "-o",
                    default=sys.stdout,
@@ -112,11 +112,11 @@ if __name__ == '__main__':
                         "e.g. article, product, jobPosting "
                         "(default: %(default)s)")
     p.add_argument("--api-key",
-                   help="Scrapinghub AutoExtract API key. "
+                   help="Zyte Automatic Extraction API key. "
                         "You can also set %s environment variable instead "
                         "of using this option." % ENV_VARIABLE)
     p.add_argument("--api-endpoint",
-                   help="Scrapinghub AutoExtract API endpoint.")
+                   help="Zyte Automatic Extraction API endpoint.")
     p.add_argument("--loglevel", "-L", default="INFO",
                    choices=["DEBUG", "INFO", "WARNING", "ERROR"],
                    help="log level")
@@ -135,7 +135,7 @@ if __name__ == '__main__':
         random.shuffle(query)
 
     logger.info(f"Loaded {len(query)} urls from {args.input.name}; shuffled: {args.shuffle}")
-    logger.info(f"Running AutoExtract (connections: {args.n_conn}, "
+    logger.info(f"Running Zyte Automatic Extraction (connections: {args.n_conn}, "
                 f"batch size: {args.batch_size}, page type: {args.page_type})")
 
     loop = asyncio.get_event_loop()

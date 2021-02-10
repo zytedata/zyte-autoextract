@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Name of the environment variable with the API key
-ENV_VARIABLE = 'SCRAPINGHUB_AUTOEXTRACT_KEY'
+ENV_VARIABLE = 'ZYTE_AUTOEXTRACT_KEY'
 
 # Endpoint
 API_ENDPOINT = 'https://autoextract.scrapinghub.com/v1/extract'

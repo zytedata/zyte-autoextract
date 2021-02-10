@@ -9,7 +9,7 @@ def chunks(lst, n):
 
 
 def user_agent(library):
-    return 'scrapinghub-autoextract/{} {}/{}'.format(
+    return 'zyte-autoextract/{} {}/{}'.format(
         __version__,
         library.__name__,
         library.__version__)

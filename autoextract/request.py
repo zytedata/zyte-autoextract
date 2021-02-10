@@ -9,8 +9,8 @@ QueryDict = Dict[str, Any]
 @attr.s
 class Request:
     """
-    A single request data for AutoExtract.
-    See https://doc.scrapinghub.com/autoextract.html#requests
+    A single request data for Zyte Automatic Extraction.
+    See https://docs.zyte.com/automatic-extraction.html#requests
 
     Note that `articleBodyRaw` is set to false by default here; API itself
     defaults to true. Set `articleBodyRaw=None` to remove `articleBodyRaw`

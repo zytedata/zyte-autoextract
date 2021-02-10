@@ -1,7 +1,7 @@
 Changes
 =======
 
-0.7.0 (2021-02-??)
+0.7.0 (2021-02-10)
 ------------------
 
 Update to accommodate upstream rebranding changes, as Scrapinghub has become

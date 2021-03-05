@@ -86,6 +86,7 @@ _RETRIABLE_ERR_MSGS = [
     "Downloader error: 50",
     "Downloader error: GlobalTimeoutError",
     "Downloader error: ConnectionResetByPeer",
+    "Downloader error: internal',
     "Proxy error: banned",
     "Proxy error: internal_error",
     "Proxy error: nxdomain",

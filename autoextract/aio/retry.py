@@ -40,7 +40,7 @@ _NETWORK_ERRORS = (
 )
 
 
-def _is_network_error(exc: Exception) -> bool:
+def _is_network_error(exc: BaseException) -> bool:
     if isinstance(exc, RequestError):
         # RequestError is ClientResponseError, which is in the
         # _NETWORK_ERRORS list, but it should be handled
@@ -49,15 +49,15 @@ def _is_network_error(exc: Exception) -> bool:
     return isinstance(exc, _NETWORK_ERRORS)
 
 
-def _is_throttling_error(exc: Exception) -> bool:
+def _is_throttling_error(exc: BaseException) -> bool:
     return isinstance(exc, RequestError) and exc.status == 429
 
 
-def _is_server_error(exc: Exception) -> bool:
+def _is_server_error(exc: BaseException) -> bool:
     return isinstance(exc, RequestError) and exc.status >= 500
 
 
-def _is_retriable_query_error(exc: Exception) -> bool:
+def _is_retriable_query_error(exc: BaseException) -> bool:
     return isinstance(exc, _QueryError) and exc.retriable and exc.max_retries > 0
 
 
@@ -97,7 +97,7 @@ class RetryFactory:
     retryable_query_error_stop = stop_after_delay(15 * 60)
 
     def wait(self, retry_state: RetryCallState) -> float:
-        exc = retry_state.outcome.exception()
+        exc: BaseException = retry_state.outcome.exception()  # type: ignore
         if _is_throttling_error(exc):
             return self.throttling_wait(retry_state=retry_state)
         elif _is_network_error(exc):
@@ -105,6 +105,7 @@ class RetryFactory:
         elif _is_server_error(exc):
             return self.server_error_wait(retry_state=retry_state)
         elif _is_retriable_query_error(exc):
+            assert isinstance(exc, _QueryError)
             return max(
                 exc.retry_seconds,
                 self.retriable_query_error_wait(retry_state=retry_state)
@@ -113,7 +114,7 @@ class RetryFactory:
             raise RuntimeError("Invalid retry state exception: %s" % exc)
 
     def stop(self, retry_state: RetryCallState) -> bool:
-        exc = retry_state.outcome.exception()
+        exc: BaseException = retry_state.outcome.exception()  # type: ignore
         if _is_throttling_error(exc):
             return self.throttling_stop(retry_state)
         elif _is_network_error(exc):
@@ -121,6 +122,7 @@ class RetryFactory:
         elif _is_server_error(exc):
             return self.server_error_stop(retry_state)
         elif _is_retriable_query_error(exc):
+            assert isinstance(exc, _QueryError)
             return (
                 self.retryable_query_error_stop |
                 stop_after_attempt(exc.max_retries + 1)

@@ -1,10 +1,10 @@
 Changes
 =======
 
-TBR:
+0.7.1 (2021-11-24)
 ------------------
 
-* --disable-ssl-check option to disable ssl verification.
+* --disable-cert-validation option to disable TSL certificates validation.
 
 0.7.0 (2021-02-10)
 ------------------

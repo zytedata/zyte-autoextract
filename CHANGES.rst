@@ -1,6 +1,11 @@
 Changes
 =======
 
+TBR:
+------------------
+
+* --disable-ssl-check option to disable ssl verification.
+
 0.7.0 (2021-02-10)
 ------------------
 

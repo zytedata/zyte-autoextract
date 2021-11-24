@@ -24,9 +24,9 @@ logger = logging.getLogger('autoextract')
 
 
 async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
-              api_key=None, api_endpoint=None, max_query_error_retries=0):
+              api_key=None, api_endpoint=None, max_query_error_retries=0, disable_cert_validation=False):
     agg_stats = AggStats()
-    async with create_session(connection_pool_size=n_conn) as session:
+    async with create_session(connection_pool_size=n_conn, disable_cert_validation=disable_cert_validation) as session:
         result_iter = request_parallel_as_completed(
             query=query,
             n_conn=n_conn,
@@ -127,6 +127,9 @@ if __name__ == '__main__':
                         "success rate at the cost of more requests being "
                         "performed. It is recommended if you are interested "
                         "in a higher success rate.")
+    p.add_argument("--disable-cert-validation", action="store_true",
+                   help="Disable TSL certificate validation in HTTPS requests. "
+                        "Any certificate will be accepted. Consider the security consequences.")
     args = p.parse_args()
     logging.basicConfig(level=getattr(logging, args.loglevel))
 
@@ -146,6 +149,7 @@ if __name__ == '__main__':
                stop_on_errors=False,
                api_key=args.api_key,
                api_endpoint=args.api_endpoint,
-               max_query_error_retries=args.max_query_error_retries)
+               max_query_error_retries=args.max_query_error_retries,
+               disable_cert_validation=args.disable_cert_validation)
     loop.run_until_complete(coro)
     loop.close()

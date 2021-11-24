@@ -5,12 +5,20 @@ import os
 from autoextract.apikey import ENV_VARIABLE
 
 
-@pytest.fixture()
-def autoextract_env_variable():
-    _FAKE_KEY = 'APIKEY'
+def fake_env(key):
     old_env = os.environ.copy()
-    os.environ[ENV_VARIABLE] = _FAKE_KEY
+    os.environ[ENV_VARIABLE] = key
     try:
-        yield _FAKE_KEY
+        yield key
     finally:
         os.environ = old_env
+
+
+@pytest.fixture()
+def autoextract_env_variable():
+    yield from fake_env('APIKEY')
+
+
+@pytest.fixture()
+def autoextract_blank_env_variable():
+    yield from fake_env('')

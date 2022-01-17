@@ -4,7 +4,6 @@ Zyte Automatic Extraction retrying logic.
 
 TODO: add sync support; only autoextract.aio is supported at the moment.
 """
-import asyncio
 import logging
 
 from aiohttp import client_exceptions
@@ -29,7 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 _NETWORK_ERRORS = (
-    asyncio.TimeoutError,  # could happen while reading the response body
     client_exceptions.ClientResponseError,
     client_exceptions.ClientOSError,
     client_exceptions.ServerConnectionError,

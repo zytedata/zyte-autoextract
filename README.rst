@@ -129,6 +129,12 @@ input queries before sending them to the API:
 
     python -m autoextract urls.txt --shuffle --page-type articles --output res.jl
 
+Some requests can take a lot of time to complete, so processing may be fast initially,
+but will slow down towards the end, while we wait for the last slow requests to complete.
+If this is undesireable, it's possible to set a smaller client timeout value,
+e.g. ``--timeout 120`` would cancel requests after 2 minutes without retrying them,
+which can be a good compromise between quality and processing speed.
+
 Run ``python -m autoextract --help`` to get description of all supported
 options.
 
@@ -138,6 +144,7 @@ Errors
 The following errors could happen while making requests:
 
 - Network errors
+- Client Timeout errors
 - `Request-level errors`_
     - Authentication failure
     - Malformed request
@@ -169,6 +176,7 @@ Retries
 By default, we will automatically retry Network and Request-level errors.
 You could also enable Query-level errors retries
 by specifying the ``--max-query-error-retries`` argument.
+Client Timeout errors are never retried.
 
 Enable Query-level retries to increase the success rate
 at the cost of more requests being performed

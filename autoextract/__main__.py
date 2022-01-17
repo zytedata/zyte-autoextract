@@ -7,6 +7,7 @@ import asyncio
 import logging
 import random
 
+import aiohttp
 import tqdm
 
 from autoextract import Request
@@ -24,9 +25,17 @@ logger = logging.getLogger('autoextract')
 
 
 async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
-              api_key=None, api_endpoint=None, max_query_error_retries=0, disable_cert_validation=False):
+              api_key=None, api_endpoint=None, max_query_error_retries=0, disable_cert_validation=False,
+              timeout=None):
     agg_stats = AggStats()
-    async with create_session(connection_pool_size=n_conn, disable_cert_validation=disable_cert_validation) as session:
+    client_timeout = None
+    if timeout is not None:
+        client_timeout = aiohttp.ClientTimeout(total=timeout, sock_connect=10)
+    async with create_session(
+            connection_pool_size=n_conn,
+            disable_cert_validation=disable_cert_validation,
+            timeout=client_timeout,
+            ) as session:
         result_iter = request_parallel_as_completed(
             query=query,
             n_conn=n_conn,
@@ -52,7 +61,7 @@ async def run(query: Query, out, n_conn, batch_size, stop_on_errors=False,
                 except Exception as e:
                     if stop_on_errors:
                         raise
-                    logger.error(str(e))
+                    logger.error(str(e) or repr(e))
                 finally:
                     pbar.set_postfix_str(str(agg_stats))
         finally:
@@ -105,6 +114,8 @@ if __name__ == '__main__':
     p.add_argument("--n-conn", type=int, default=20,
                    help="number of connections to the API server "
                         "(default: %(default)s)")
+    p.add_argument("--timeout", type=int,
+                   help="timeout for individual requests (maximum timeout is used by default)")
     p.add_argument("--batch-size", type=int, default=2,
                    help="batch size (default: %(default)s)")
     p.add_argument("--page-type", "-t", default="article",
@@ -150,6 +161,7 @@ if __name__ == '__main__':
                api_key=args.api_key,
                api_endpoint=args.api_endpoint,
                max_query_error_retries=args.max_query_error_retries,
-               disable_cert_validation=args.disable_cert_validation)
+               disable_cert_validation=args.disable_cert_validation,
+               timeout=args.timeout)
     loop.run_until_complete(coro)
     loop.close()

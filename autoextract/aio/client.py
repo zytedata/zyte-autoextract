@@ -25,12 +25,13 @@ AIO_API_TIMEOUT = aiohttp.ClientTimeout(total=API_TIMEOUT + 60,
                                         sock_connect=10)
 
 
-def create_session(connection_pool_size=100, disable_cert_validation=False, **kwargs) -> aiohttp.ClientSession:
+def create_session(connection_pool_size=100, disable_cert_validation=False, timeout=None, **kwargs) -> aiohttp.ClientSession:
     """ Create a session with parameters suited for Zyte Automatic Extraction """
-    kwargs.setdefault('timeout', AIO_API_TIMEOUT)
+    if timeout is None:
+        timeout = AIO_API_TIMEOUT
     if "connector" not in kwargs:
         kwargs["connector"] = TCPConnector(limit=connection_pool_size, ssl=False if disable_cert_validation else None)
-    return aiohttp.ClientSession(**kwargs)
+    return aiohttp.ClientSession(timeout=timeout, **kwargs)
 
 
 class Result(List[Dict]):
